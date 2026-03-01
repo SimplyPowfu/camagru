@@ -1,3 +1,4 @@
+```
 camagru/
 ├── config/             # Configurazione e Setup
 │   ├── database.php    # Connessione PDO
@@ -17,3 +18,4 @@ camagru/
 ├── uploads/            # Foto finali salvate (Server-side)
 ├── .env                # Credenziali (DA IGNORARE IN GIT)
 └── docker-compose.yml  # Containerizzaze
+```
