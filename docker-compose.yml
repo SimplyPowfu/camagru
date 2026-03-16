@@ -19,6 +19,9 @@ services:
       - .:/var/www/html
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     image: mysql:8.0
@@ -28,8 +31,19 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user_camagru", "--password=Camagru42$"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - db_data:/var/lib/mysql
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080"
 
 volumes:
   db_data:
