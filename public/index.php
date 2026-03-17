@@ -1,44 +1,23 @@
 <?php
-	session_start();
-	$route = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 	
-	switch ($route) {
-		case '/':
-			echo "<h1>Benvenuto nella Home/Gallery</h1>";
-			break;
-		case '/editing':
-			// Protezione area privata 
-			if (!isset($_SESSION['user'])) {
-				header('Location: /login');
-				exit;
-			}
-			// Carica la pagina di editing
-			break;
-		default:
-			http_response_code(404);
-			echo "Pagina non trovata";
-			break;
-	}
+	session_start();
+	
+	require_once __DIR__ . '/../src/router.php';
+	require_once __DIR__ . '/../src/controllers/HomeController.php';
+	require_once __DIR__ . '/../src/controllers/AuthController.php';
 
-	require_once __DIR__ . '/../config/database.php';
-	require_once __DIR__ . '/../config/setup.php';
+	$router = new Router();
 
-	try {
-		$db = getDatabaseConnection();
-		
-		$check = $db->query("SHOW TABLES LIKE 'users'");
-		if ($check->rowCount() == 0) {
-			$env = parse_ini_file(__DIR__ . '/../.env', false, INI_SCANNER_RAW);
-			if (runDatabaseSetup($db, $env['DB_NAME'])) {
-				echo "<p style='color: blue;'>⚙️ Sistema inizializzato automaticamente.</p>";
-			} else {
-				die("Errore critico durante l'inizializzazione automatica.");
-			}
-		}
-		else
-			echo "<p style='color: blue;'>⚙️ Sistema trovato.</p>";
-	} catch (Exception $e) {
-		echo "<p style='color: red;'>❌ Errore di connessione: " . $e->getMessage() . "</p>";
-	}
-	phpinfo();
+	// Controllers
+	$home = new HomeController();
+	$auth = new AuthController();
+
+	// Routes
+	$router->get('/', [$home, 'index']);
+	$router->get('/login', [$auth, 'login']);
+	$router->get('/register', [$auth, 'register']);
+	$router->get('/editing', [$auth, 'editing'], 'AuthMiddleware');
+
+	// Resolve request
+	$router->resolve($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 ?>

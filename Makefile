@@ -5,6 +5,9 @@ all: up
 up:
 	docker-compose up -d --build
 
+setup:
+	docker-compose exec backend php config/setup.php
+
 down:
 	docker-compose down
 

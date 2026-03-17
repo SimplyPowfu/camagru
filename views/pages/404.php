@@ -1,0 +1,3 @@
+<html>
+	<h1>404 - Pagina non trovata</h1>
+</html>
