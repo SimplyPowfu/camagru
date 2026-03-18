@@ -12,11 +12,16 @@
 	$home = new HomeController();
 	$auth = new AuthController();
 
-	// Routes
+	// Routes get
 	$router->get('/', [$home, 'index']);
 	$router->get('/login', [$auth, 'login']);
 	$router->get('/register', [$auth, 'register']);
 	$router->get('/editing', [$auth, 'editing'], 'AuthMiddleware');
+	$router->get('/logout', [$auth, 'logout']);
+
+	//Routes post
+	$router->post('/api/register', [$auth, 'handleRegister']);
+	$router->post('/api/login', [$auth, 'handleLogin']);
 
 	// Resolve request
 	$router->resolve($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

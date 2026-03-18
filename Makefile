@@ -3,21 +3,21 @@ NAME = camagru
 all: up
 
 up:
-	docker-compose up -d --build
+	docker compose up -d --build
 
 setup:
-	docker-compose exec backend php config/setup.php
+	docker compose exec backend php config/setup.php
 
 down:
-	docker-compose down
+	docker compose down
 
 clean:
-	docker-compose down -v --rmi all --remove-orphans
+	docker compose down -v --rmi all --remove-orphans
 
 re: clean all
 
 logs:
-	docker-compose logs -f backend
+	docker compose logs -f backend
 
 shell:
 	docker exec -it backend sh
