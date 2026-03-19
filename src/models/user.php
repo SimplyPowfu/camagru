@@ -51,6 +51,13 @@ class User {
     }
 
     /**
+     * prende un file_path e la salva sul db
+     */
+    // public static function addPicture($id, $file_path) {
+        
+    // }
+
+    /**
      * Attiva un account tramite token
      */
     public static function activateByToken($token) {

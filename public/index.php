@@ -5,12 +5,14 @@
 	require_once __DIR__ . '/../src/router.php';
 	require_once __DIR__ . '/../src/controllers/HomeController.php';
 	require_once __DIR__ . '/../src/controllers/AuthController.php';
+	require_once __DIR__ . '/../src/controllers/PhotoController.php';
 
 	$router = new Router();
 
 	// Controllers
 	$home = new HomeController();
 	$auth = new AuthController();
+	$photo = new PhotoController();
 
 	// Routes get
 	$router->get('/', [$home, 'index']);
@@ -23,7 +25,9 @@
 	$router->get('/logout', [$auth, 'logout']);//delete session
 
 		//Protected
-	$router->get('/editing', [$auth, 'editing'], 'AuthMiddleware');//pagina editing foto
+	$router->get('/editing', [$photo, 'editing'], 'AuthMiddleware');//pagina editing foto
+		//Save picture in uploads/ + link in db
+	// $router->get('/api/save', [$photo, 'save'], 'AuthMiddleware');//pagina editing foto
 
 	//Routes post (API)
 	$router->post('/api/register', [$auth, 'handleRegister']);
