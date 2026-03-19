@@ -1,135 +1,151 @@
 <?php
 
-	require_once __DIR__ . '/../controller.php';
-	require_once __DIR__ . '/../utils/database.php';
+require_once __DIR__ . '/../controller.php';
+require_once __DIR__ . '/../utils/email.php';
+require_once __DIR__ . '/../models/user.php';
 
-	class AuthController extends Controller {
+class AuthController extends Controller {
 
-		public function login() {
-			$this->view('login');
-		}
+    public function login() {
+        $this->view('login');
+    }
 
-		public function handleLogin() {
-			header('Content-Type: application/json');
+    public function handleLogin() {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $username = $input['username'] ?? '';
+        $password = $input['password'] ?? '';
 
-			$input = json_decode(file_get_contents('php://input'), true);
-			$username = $input['username'] ?? '';
-			$password = $input['password'] ?? '';
+        if (empty($username) || empty($password)) {
+            echo json_encode(['success' => false, 'message' => 'Campi mancanti']);
+            return;
+        }
 
-			if (empty($username) || empty($password)) {
-				echo json_encode(['success' => false, 'message' => 'Campi mancanti']);
-				return;
-			}
+        try {
+            $user = User::findByUsername($username);
 
-			try {
-				$db = Database::getInstance();
-				$stmt = $db->prepare("SELECT * FROM users WHERE username = :username LIMIT 1");
-				$stmt->execute(['username' => $username]);
-				$user = $stmt->fetch();
+            if ($user && password_verify($password, $user['password'])) {
+                if ($user['is_active'] == 0) {
+                    echo json_encode(['success' => false, 'message' => 'Account non attivato']);
+                    return;
+                }
 
-				if ($user && password_verify($password, $user['password'])) {
-					if ($user['is_active'] == 0) {
-						echo json_encode(['success' => false, 'message' => 'Account non attivato']);
-						return;
-					}
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email']
+                ];
 
-					// Oggetto user
-					$_SESSION['user'] = [
-						'id' => $user['id'],
-						'username' => $user['username'],
-						'email' => $user['email']
-					];
+                echo json_encode(['success' => true, 'message' => 'Login effettuato']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Credenziali errate']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Errore del server']);
+        }
+    }
 
-					echo json_encode(['success' => true, 'message' => 'Login effettuato']);
-				} else {
-					echo json_encode(['success' => false, 'message' => 'Credenziali errate']);
-				}
-			} catch (Exception $e) {
-				http_response_code(500);
-				echo json_encode(['success' => false, 'message' => 'Errore del server']);
-			}
-		}
+    public function register() {
+        $this->view('register');
+    }
 
-		public function register() {
-			$this->view('register');
-		}
+    public function handleRegister() {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $email = $input['email'] ?? '';
+        $username = $input['username'] ?? '';
+        $password = $input['password'] ?? '';
 
-		public function handleRegister() {
-			header('Content-Type: application/json');
+        if (empty($email) || empty($username) || empty($password)) {
+            echo json_encode(['success' => false, 'message' => 'Campi mancanti']);
+            return;
+        }
 
-			$input = json_decode(file_get_contents('php://input'), true);
-			$email = $input['email'] ?? '';
-			$username = $input['username'] ?? '';
-			$password = $input['password'] ?? '';
+        if (strlen($password) < 8 || !preg_match("/[a-z]/", $password) || !preg_match("/[0-9]/", $password)) {
+            echo json_encode(['success' => false, 'message' => 'La password non rispetta i requisiti']);
+            return;
+        }
 
-			if (empty($email) ||empty($username) || empty($password)) {
-				echo json_encode(['success' => false, 'message' => 'Campi mancanti']);
-				return;
-			}
-			if (strlen($password) < 8 || !preg_match("/[a-z]/", $password) || !preg_match("/[0-9]/", $password)) {
-				echo json_encode(['success' => false, 'message' => 'La password deve essere di almeno 8 caratteri e contenere numeri']);
-				return;
-			}
+        try {
+            if (User::exists($username, $email)) {
+                echo json_encode(['success' => false, 'message' => 'Username o Email già utilizzati']);
+                return;
+            }
 
-			try {
-				$db = Database::getInstance();
+            $token = bin2hex(random_bytes(50));
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-				//Verifica se username o email esistono già
-				$stmt = $db->prepare("SELECT id FROM users WHERE username = :u OR email = :e LIMIT 1");
-				$stmt->execute(['u' => $username, 'e' => $email]);
-				if ($stmt->fetch()) {
-					echo json_encode(['success' => false, 'message' => 'Username o Email già utilizzati']);
-					return;
-				}
+            // Creazione tramite Model
+            if (User::create($username, $email, $hashedPassword, $token)) {
+                $link = "http://localhost:8080/activate?token=" . $token;
+                sendEmail($email, "Attiva Account Camagru", "Clicca qui: " . $link);
+                echo json_encode(['success' => true, 'message' => 'Registrazione completata! Controlla la mail.']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Errore interno']);
+        }
+    }
 
-				$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+    public function activate() {
+        $token = $_GET['token'] ?? '';
+        if (User::activateByToken($token)) {
+            header('Location: /login?activated=true');
+        } else {
+            die("Link non valido o scaduto.");
+        }
+    }
 
-				//Generazione token per attivazione email
-				$token = bin2hex(random_bytes(50));
+	public function reset_pass() {
+        $this->view('reset_pass');
+    }
 
-				// Query per salvataggio sul Database
-				$sql = "INSERT INTO users (username, email, password, activation_token, is_active) 
-						VALUES (:username, :email, :password, :token, 1)";
-				
-				$stmt = $db->prepare($sql);
-				$stmt->execute([
-					'username' => $username,
-					'email'    => $email,
-					'password' => $hashedPassword,
-					'token'    => $token
-				]);
+    public function forgotPassword() {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $email = $input['email'] ?? '';
 
-				// (TODO) Qui andrebbe la logica per inviare l'email (mail())
-				echo json_encode([
-					'success' => true, 
-					'message' => 'Registrazione completata! Controlla la tua email per attivare l\'account.'
-				]);
+        if ($email && $user = User::findByEmail($email)) {
+            $token = bin2hex(random_bytes(50));
+            User::setResetToken($email, $token);
+            $link = "http://localhost:8080/reset?token=" . $token;
+            sendEmail($email, "Reset Password", "Link: " . $link);
+        }
+        echo json_encode(['success' => true, 'message' => 'Se l\'email esiste, riceverai un link.']);
+    }
 
-			} catch (Exception $e) {
-				http_response_code(500);
-				echo json_encode(['success' => false, 'message' => 'Errore interno: ' . $e->getMessage()]);
-			}
-		}
+    public function reset() {
+        $token = $_GET['token'] ?? '';
+        if (User::isResetTokenValid($token)) {
+            header('Location: /reset_pass?token=' . $token);
+        } else {
+            die("Token non valido.");
+        }
+    }
 
-		public function editing() {
-			$this->view('editing');
-		}
+    public function reinitPassword() {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $token = $input['token'] ?? '';
+        $password = $input['password'] ?? '';
 
-		public function logout() {
-			$_SESSION = [];
+        if (strlen($password) < 8 || !preg_match("/[0-9]/", $password)) {
+            echo json_encode(['success' => false, 'message' => 'Password debole']);
+            return;
+        }
 
-			//distrugge anche i cookie di sessione nel browser
-			if (ini_get("session.use_cookies")) {
-				$params = session_get_cookie_params();
-				setcookie(session_name(), '', time() - 42000,
-					$params["path"], $params["domain"],
-					$params["secure"], $params["httponly"]
-				);
-			}
+        if (User::updatePasswordByResetToken($token, password_hash($password, PASSWORD_BCRYPT))) {
+            echo json_encode(['success' => true, 'message' => 'Password aggiornata!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Errore o token scaduto']);
+        }
+    }
 
-			session_destroy();
-			header('Location: /login');
-			exit;
-		}
-	}
-?>
+    public function logout() {
+        $_SESSION = [];
+        session_destroy();
+        header('Location: /');
+        exit;
+    }
+}
