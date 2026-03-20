@@ -26,14 +26,19 @@
 
 		//Protected
 	$router->get('/editing', [$photo, 'editing'], 'AuthMiddleware');//pagina editing foto
-		//Save picture in uploads/ + link in db
-	// $router->get('/api/save', [$photo, 'save'], 'AuthMiddleware');//pagina editing foto
-
+	$router->get('/post', [$photo, 'post'], 'AuthMiddleware');//pagina post foto
+	
+	$router->get('/api/post/picture', [$photo, 'getPictureToName'], 'AuthMiddleware');//get che ritorna un array di foto di uno user
+	$router->get('/api/user/picture', [$photo, 'getNamePictures'], 'AuthMiddleware');//get che ritorna un array di foto di uno user
+	$router->get('/api/gallery/picture', [$photo, 'getPictures']);//get che ritorna un array di n foto
+	
 	//Routes post (API)
 	$router->post('/api/register', [$auth, 'handleRegister']);
 	$router->post('/api/login', [$auth, 'handleLogin']);
 	$router->post('/api/reset_token', [$auth, 'forgotPassword']);
 	$router->post('/api/reset', [$auth, 'reinitPassword']);
+		//Protected
+	$router->post('/api/save', [$photo, 'save'], 'AuthMiddleware');//Save picture in uploads/ and db
 
 	// Resolve request
 	$router->resolve($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

@@ -12,6 +12,7 @@ if (is_dir($filterDir)) {
     }
 }
 ?>
+<a href="/">Home</a>
 
 <div class="editing-container">
     <div class="main-edit-area">
@@ -46,6 +47,7 @@ if (is_dir($filterDir)) {
                 <button id="btn-discard" class="btn btn-danger">Scarta e Riprova</button>
             </div>
         </div>
+        <p id="message" style="margin-top: 5px;"></p>
     </div>
 
     <aside class="sidebar">
@@ -69,6 +71,20 @@ if (is_dir($filterDir)) {
     .btn:disabled { background: #ccc; cursor: not-allowed; }
     .btn-secondary { background: #6c757d; color: white; padding: 10px 20px; cursor: pointer; border-radius: 5px; display: inline-block; margin-right: 10px; }
     .sidebar { width: 250px; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; }
+    #side-gallery {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    #side-gallery img {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 </style>
 
 <script>
@@ -258,30 +274,62 @@ if (is_dir($filterDir)) {
         renderUI();
     });
 
-    DOM.btnSave.addEventListener('click', () => { console.log(DOM.canvas.toDataURL('image/png')); })
-    // DOM.btnSave.addEventListener('click', async () => {
-    //     const dataUrl = DOM.canvas.toDataURL('image/png');
+    DOM.btnSave.addEventListener('click', async () => {
+        const dataUrl = DOM.canvas.toDataURL('image/png');
+        const messageElement = document.getElementById('message');
+        console.log(dataUrl);
 
-    //     try {
-    //         const response = await fetch('/api/save', { // Assicurati che il tuo router punti a PhotoController
-    //             method: 'POST',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({ image: dataUrl })
-    //         });
+        try {
+            const response = await fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            });
 
-    //         const result = await response.json();
-    //         if (result.success) {
-    //             alert("Immagine salvata con successo!");
-    //             AppState.phase = 'live'; // Torna alla modalità scatto
-    //             renderUI();
-    //         } else {
-    //             alert("Errore: " + result.message);
-    //         }
-    //     } catch (error) {
-    //         console.error("Errore nell'invio:", error);
-    //     }
-    // });
+            const result = await response.json();
+            if (result.success) {
+                messageElement.style.color = 'green';
+                messageElement.textContent = 'Immagine salvata con successo!';
+                AppState.phase = 'live'; //Torna alla modalità scatto
+                renderUI();
+                loadUserGallery();
+            } else {
+                messageElement.style.color = 'red';
+                messageElement.textContent = result.message;
+            }
+        } catch (error) {
+            messageElement.style.color = 'red';
+            messageElement.textContent = 'Errore di connessione al server.';
+            console.error("Errore nell'invio:", error);
+        }
+    });
     DOM.btnDiscard.addEventListener('click', () => { AppState.phase = 'live'; renderUI(); });
+
+    async function loadUserGallery() {
+        const sideGallery = document.getElementById('side-gallery');
+        const username = "<?= $_SESSION['user']['username'] ?? '' ?>"; 
+
+        if (!username) return;
+
+        try {
+            const response = await fetch(`/api/user/picture?username=${username}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                sideGallery.innerHTML = '';
+                result.data.forEach(photo => {
+                const img = document.createElement('img');
+                img.src = '/uploads/' + photo.file_path; 
+                sideGallery.appendChild(img);
+            });
+            }
+        } catch (error) {
+            console.error("Errore nel caricamento della gallery:", error);
+        }
+    }
+
+    // inizializzazione della pagina
     initWebcam();
+    loadUserGallery();
 })();
 </script>
