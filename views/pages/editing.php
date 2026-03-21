@@ -12,7 +12,6 @@ if (is_dir($filterDir)) {
     }
 }
 ?>
-<a href="/">Home</a>
 
 <div class="editing-container">
     <div class="main-edit-area">
@@ -55,37 +54,6 @@ if (is_dir($filterDir)) {
         <div id="side-gallery"></div>
     </aside>
 </div>
-
-<style>
-    .editing-container { display: flex; gap: 20px; padding: 20px; font-family: sans-serif; }
-    .main-edit-area { flex: 1; }
-    .preview-box { position: relative; width: 640px; height: 480px; background: #000; border: 2px solid #333; overflow: hidden; user-select: none; }
-    #video, #file-preview, #canvas { width: 100%; height: 100%; object-fit: contain; }
-    #video { transform: scaleX(-1); object-fit: cover; }
-    #sticker-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
-    .dynamic-sticker { position: absolute; cursor: move; width: 150px; }
-    .sticker-list { display: flex; gap: 10px; margin: 15px 0; padding: 10px; background: #eee; border-radius: 5px; }
-    .sticker-opt { width: 70px; height: 70px; cursor: pointer; border: 3px solid transparent; padding: 5px; object-fit: contain; }
-    .sticker-opt.selected { border-color: #007bff; background: white; border-radius: 10px; }
-    .btn { background: #007bff; color: white; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-    .btn:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-secondary { background: #6c757d; color: white; padding: 10px 20px; cursor: pointer; border-radius: 5px; display: inline-block; margin-right: 10px; }
-    .sidebar { width: 250px; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; }
-    #side-gallery {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-height: 80vh;
-        overflow-y: auto;
-        padding-right: 5px;
-    }
-    #side-gallery img {
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-</style>
 
 <script>
 (function() {
@@ -289,7 +257,7 @@ if (is_dir($filterDir)) {
             const result = await response.json();
             if (result.success) {
                 messageElement.style.color = 'green';
-                messageElement.textContent = 'Immagine salvata con successo!';
+                messageElement.textContent = result.message;
                 AppState.phase = 'live'; //Torna alla modalità scatto
                 renderUI();
                 loadUserGallery();

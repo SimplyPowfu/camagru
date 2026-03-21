@@ -20,10 +20,13 @@ class Photo {
 
     public static function getPictureToName($file_path) {
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT * FROM images WHERE file_path = :filepath");
+        $stmt = $db->prepare("SELECT i.*, u.username 
+            FROM images i 
+            JOIN users u ON i.user_id = u.id 
+            WHERE i.file_path = :file_path");
         $stmt->execute(['file_path' => $file_path]);
         
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**

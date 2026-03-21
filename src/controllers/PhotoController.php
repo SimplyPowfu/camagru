@@ -13,6 +13,7 @@
 		}
 
 		public function save() {
+			if (ob_get_length()) ob_clean();
 			// Leggiamo il corpo della richiesta JSON
 			header('Content-Type: application/json');
 			$data = json_decode(file_get_contents('php://input'), true);
@@ -32,19 +33,19 @@
 			$folder = __DIR__ . '/../../public/uploads/';
 			$fileName = 'camagru_' . time() . '.png';
 			$filePath = $folder . $fileName;
-
 			if (!is_dir($folder))
 				mkdir($folder, 0777, true);
-
+			if (!is_writable($folder)) {
+				echo json_encode([
+					'success' => false, 
+					'message' => 'ERRORE PERMESSI: La cartella non ha permessi.',
+				]);
+				return;
+			}
 			try {
 				if (file_put_contents($filePath, $fileData)) {
 					if (Photo::addPicture($user['id'], $fileName)) {
-						echo json_encode([
-							'success' => true, 
-							'message' => 'Salvato!',
-							'file' => $fileName
-						]);
-						return ;
+						echo json_encode(['success' => true, 'message' => 'Post Salvato!']);
 					} else
 						echo json_encode(['success' => false, 'message' => 'Impossibile caricare il File']);
 				} else {
@@ -56,7 +57,7 @@
 			}
 		}
 
-		public function getPictureToName($file_path) {
+		public function getPictureToName() {
 			header('Content-Type: application/json');
 			$file_path = $_GET['file_path'] ?? '';
 			if (empty($file_path)) {
