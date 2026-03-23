@@ -58,6 +58,7 @@
 		}
 
 		public function getPictureToName() {
+			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
 			$file_path = $_GET['file_path'] ?? '';
 			if (empty($file_path)) {
@@ -82,6 +83,7 @@
 		}
 
 		public function getNamePictures() {
+			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
 			$username = $_GET['username'] ?? '';
 			if (empty($username)) {
@@ -106,6 +108,7 @@
 		}
 
 		public function getPictures() {
+			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
 			$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
 			if (empty($limit)) {
@@ -128,5 +131,107 @@
 				echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 			}
 		}
+
+		public function checkLike() {
+			if (ob_get_length()) ob_clean();
+			header('Content-Type: application/json');
+			$image_id = isset($_GET['image_id']) ? (int)$_GET['image_id'] : null;
+			$user = $_SESSION['user'] ?? null;
+
+			if (!$image_id || !$user) {
+				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+				return;
+			}
+			try {
+				$existingLike = Photo::checkLike($image_id, $user['id']);
+				$totalLikes = Photo::countLikes($image_id);
+				if ($existingLike)
+					echo json_encode(['success' => true, 'action' => 'like', 'count' => $totalLikes, 'message' => 'hai messo Like']);
+				else 
+					echo json_encode(['success' => true, 'action' => 'nonlike', 'count' => $totalLikes, 'message' => 'non hai messo Like']);
+			} catch (Exception $e) {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+			}
+		}
+
+		public function toggleLike() {
+			if (ob_get_length()) ob_clean();
+			header('Content-Type: application/json');
+			$data = json_decode(file_get_contents('php://input'), true);
+			$image_id = $data['image_id'] ?? null;
+			$user = $_SESSION['user'] ?? null;
+
+			if (!$image_id || !$user) {
+				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+				return;
+			}
+			try {
+				$existingLike = Photo::checkLike($image_id, $user['id']);
+				if ($existingLike) {
+					Photo::removeLike($image_id, $user['id']);
+					$totalLikes = Photo::countLikes($image_id);
+					echo json_encode(['success' => true, 'action' => 'unliked', 'count' => $totalLikes, 'message' => 'Like rimosso']);
+				} else {
+					Photo::addLike($image_id, $user['id']);
+					$totalLikes = Photo::countLikes($image_id);
+					echo json_encode(['success' => true, 'action' => 'liked', 'count' => $totalLikes, 'message' => 'Like aggiunto']);
+				}
+			} catch (Exception $e) {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+			}
+		}
+
+		public function addComment() {
+			if (ob_get_length()) ob_clean();
+			// Leggiamo il corpo della richiesta JSON
+			header('Content-Type: application/json');
+			$data = json_decode(file_get_contents('php://input'), true);
+			$image_id = $data['image_id'] ?? null;
+			$comment = $data['comment'] ?? null;
+			$user = $_SESSION['user'] ?? null;
+
+			if (!$image_id || !$user || !$comment) {
+				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+				return;
+			}
+			try {
+				if (Photo::addComment($image_id, $user['id'], $comment))
+					echo json_encode(['success' => true, 'message' => 'Commento Salvato!']);
+				else
+					echo json_encode(['success' => false, 'message' => 'Impossibile Salvare il commento']);
+			} catch (Exception $e) {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+			}
+		}
+
+		public function getComment() {
+			if (ob_get_length()) ob_clean();
+			// Leggiamo il corpo della richiesta JSON
+			header('Content-Type: application/json');
+			$image_id = $_GET['image_id'] ?? null;
+			if (!$image_id) {
+				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+				return;
+			}
+			try {
+				$comments = Photo::getComment($image_id);
+				if (empty($comments)) {
+					echo json_encode(['success' => false, 'message' => 'Nessuna commento trovato']);
+					return;
+				}
+				echo json_encode([
+					'success' => true, 
+					'message' => 'Commenti caricati!',
+					'data' => $comments
+				]);
+			} catch (Exception $e) {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+			}
+		}
 	}
+
 ?>

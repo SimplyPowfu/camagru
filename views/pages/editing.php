@@ -48,11 +48,6 @@ if (is_dir($filterDir)) {
         </div>
         <p id="message" style="margin-top: 5px;"></p>
     </div>
-
-    <aside class="sidebar">
-        <h3>Le tue creazioni</h3>
-        <div id="side-gallery"></div>
-    </aside>
 </div>
 
 <script>
@@ -260,7 +255,9 @@ if (is_dir($filterDir)) {
                 messageElement.textContent = result.message;
                 AppState.phase = 'live'; //Torna alla modalità scatto
                 renderUI();
-                loadUserGallery();
+                if (typeof window.loadUserGallery === 'function') {
+                    window.loadUserGallery();
+                }
             } else {
                 messageElement.style.color = 'red';
                 messageElement.textContent = result.message;
@@ -273,31 +270,7 @@ if (is_dir($filterDir)) {
     });
     DOM.btnDiscard.addEventListener('click', () => { AppState.phase = 'live'; renderUI(); });
 
-    async function loadUserGallery() {
-        const sideGallery = document.getElementById('side-gallery');
-        const username = "<?= $_SESSION['user']['username'] ?? '' ?>"; 
-
-        if (!username) return;
-
-        try {
-            const response = await fetch(`/api/user/picture?username=${username}`);
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                sideGallery.innerHTML = '';
-                result.data.forEach(photo => {
-                const img = document.createElement('img');
-                img.src = '/uploads/' + photo.file_path; 
-                sideGallery.appendChild(img);
-            });
-            }
-        } catch (error) {
-            console.error("Errore nel caricamento della gallery:", error);
-        }
-    }
-
     // inizializzazione della pagina
     initWebcam();
-    loadUserGallery();
 })();
 </script>

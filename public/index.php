@@ -27,6 +27,8 @@
 		//Protected
 	$router->get('/editing', [$photo, 'editing'], 'AuthMiddleware');//pagina editing foto
 	$router->get('/post', [$photo, 'post'], 'AuthMiddleware');//pagina post foto
+	$router->get('/api/post/checkLike', [$photo, 'checkLike'], 'AuthMiddleware');
+	$router->get('/api/post/loadComments', [$photo, 'getComment'], 'AuthMiddleware');
 	
 	$router->get('/api/post/picture', [$photo, 'getPictureToName'], 'AuthMiddleware');//get che ritorna una foto di uno user
 	$router->get('/api/user/picture', [$photo, 'getNamePictures'], 'AuthMiddleware');//get che ritorna un array di foto di uno user
@@ -39,6 +41,8 @@
 	$router->post('/api/reset', [$auth, 'reinitPassword']);
 		//Protected
 	$router->post('/api/save', [$photo, 'save'], 'AuthMiddleware');//Save picture in uploads/ and db
+	$router->post('/api/post/toggleLike', [$photo, 'toggleLike'], 'AuthMiddleware');//Aggiunge o leva un Like ad una foto
+	$router->post('/api/post/addComment', [$photo, 'addComment'], 'AuthMiddleware');//Aggiunge un commento ad un post
 
 	// Resolve request
 	$router->resolve($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

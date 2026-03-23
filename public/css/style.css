@@ -1,63 +1,198 @@
+/* --- LAYOUT GENERALE (Gestito dal Controller) --- */
+.main-layout-container {
+    display: flex;
+    flex-direction: row; /* Main a sinistra, Side a destra */
+    gap: 30px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+main {
+    flex: 1;
+    min-width: 0; /* Evita rotture di layout con contenuti larghi */
+}
+
+/* --- SIDEBAR GLOBALE (side.php) --- */
+.sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: #f8f9fa;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    position: sticky; /* La sidebar ti segue durante lo scroll */
+    top: 20px;
+}
+
+.sidebar h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+#side-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Scrollbar stilizzata per la sidebar */
+#side-gallery::-webkit-scrollbar { width: 6px; }
+#side-gallery::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+#side-gallery img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#side-gallery img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* --- GALLERIA HOME (Grid 5 colonne) --- */
 .gallery {
-	margin-top: 20px;
-	padding: 10px;
+    margin-top: 10px;
 }
 
 #home-gallery {
-	display: grid;
-	grid-template-columns: repeat(5, 1fr); 
-	gap: 15px; /* Spazio tra le foto */
-	padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 20px;
+    padding: 10px 0;
 }
 
 #home-gallery img {
-	width: 100%; /* La foto occupa tutta la sua cella della griglia */
-	aspect-ratio: 1 / 1; /* Rende le foto quadrate (molto stile Instagram) */
-	object-fit: cover; /* Taglia l'immagine per riempire il quadrato senza distorcerla */
-	border-radius: 4px;
-	box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-	transition: transform 0.2s;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    cursor: pointer;
 }
 
 #home-gallery img:hover {
-	transform: scale(1.05); /* Effetto zoom al passaggio del mouse */
-	cursor: pointer;
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
 }
 
-/* per schermi piccoli (tablet/mobile) riduciamo le colonne */
-@media (max-width: 900px) {
-	#home-gallery { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 500px) {
-	#home-gallery { grid-template-columns: repeat(2, 1fr); }
+/* --- EDITOR AVANZATO (editing.php) --- */
+.main-edit-area {
+    background: white;
+    padding: 10px;
 }
 
-/* EDITING  */
-.editing-container { display: flex; gap: 20px; padding: 20px; font-family: sans-serif; }
-.main-edit-area { flex: 1; }
-.preview-box { position: relative; width: 640px; height: 480px; background: #000; border: 2px solid #333; overflow: hidden; user-select: none; }
-#video, #file-preview, #canvas { width: 100%; height: 100%; object-fit: contain; }
-#video { transform: scaleX(-1); object-fit: cover; }
-#sticker-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
-.dynamic-sticker { position: absolute; cursor: move; width: 150px; }
-.sticker-list { display: flex; gap: 10px; margin: 15px 0; padding: 10px; background: #eee; border-radius: 5px; }
-.sticker-opt { width: 70px; height: 70px; cursor: pointer; border: 3px solid transparent; padding: 5px; object-fit: contain; }
+.preview-box {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    background: #000;
+    margin-bottom: 20px;
+    border: 5px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    user-select: none;
+}
+
+#video, #file-preview, #canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#video {
+    transform: scaleX(-1); /* Effetto specchio per la webcam */
+    object-fit: cover;
+}
+
+#sticker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+.dynamic-sticker {
+    position: absolute;
+    cursor: move;
+    width: 150px;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
+}
+
+.sticker-selector {
+    margin-top: 25px;
+}
+
+.sticker-list {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    padding: 15px;
+    background: #f1f1f1;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.sticker-opt {
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    padding: 5px;
+    object-fit: contain;
+    transition: all 0.2s;
+}
+
+.sticker-opt:hover { background: #e0e0e0; border-radius: 10px; }
 .sticker-opt.selected { border-color: #007bff; background: white; border-radius: 10px; }
-.btn { background: #007bff; color: white; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-.btn:disabled { background: #ccc; cursor: not-allowed; }
-.btn-secondary { background: #6c757d; color: white; padding: 10px 20px; cursor: pointer; border-radius: 5px; display: inline-block; margin-right: 10px; }
-.sidebar { width: 250px; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; }
-#side-gallery {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	max-height: 80vh;
-	overflow-y: auto;
-	padding-right: 5px;
+
+/* Pulsanti e Controlli */
+.controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+
+.btn { 
+    background: #007bff; color: white; border: none; 
+    padding: 12px 25px; cursor: pointer; font-weight: bold; 
+    border-radius: 6px; transition: background 0.2s;
 }
-#side-gallery img {
-	width: 100%;
-	height: auto;
-	object-fit: cover;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+.btn:hover:not(:disabled) { background: #0056b3; }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+
+.btn-success { background: #28a745; }
+.btn-success:hover { background: #218838; }
+
+.btn-danger { background: #dc3545; }
+.btn-danger:hover { background: #c82333; }
+
+.btn-secondary { 
+    background: #6c757d; color: white; padding: 12px 20px; 
+    cursor: pointer; border-radius: 6px; display: inline-block;
+}
+
+@media (max-width: 1100px) {
+    #home-gallery { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 850px) {
+    .main-layout-container { flex-direction: column; }
+    .sidebar { width: 100%; position: static; order: 2; }
+    main { order: 1; }
+    .preview-box { width: 100%; height: auto; aspect-ratio: 4/3; }
+    #home-gallery { grid-template-columns: repeat(2, 1fr); }
 }

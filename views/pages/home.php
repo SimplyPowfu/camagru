@@ -6,9 +6,6 @@
     <h3>Galleria</h3>
     <div id="home-gallery"></div>
 </aside>
-<?php
-    phpinfo();
-?>
 
 <script>
     (function() {

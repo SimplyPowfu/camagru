@@ -11,6 +11,7 @@ class AuthController extends Controller {
     }
 
     public function handleLogin() {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true);
         $username = $input['username'] ?? '';
@@ -51,6 +52,7 @@ class AuthController extends Controller {
     }
 
     public function handleRegister() {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true);
         $email = $input['email'] ?? '';
@@ -102,6 +104,7 @@ class AuthController extends Controller {
     }
 
     public function forgotPassword() {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true);
         $email = $input['email'] ?? '';
@@ -125,6 +128,7 @@ class AuthController extends Controller {
     }
 
     public function reinitPassword() {
+        if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true);
         $token = $input['token'] ?? '';

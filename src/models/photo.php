@@ -18,6 +18,64 @@ class Photo {
         ]);
     }
 
+    /**
+     * Aggiunge un commento ad una picture al db Comments
+     */
+    public static function addComment($image_id, $user_id, $comment) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("INSERT INTO comments (image_id, user_id, content) 
+                VALUES (:image_id, :user_id, :comment)");
+        
+        return $stmt->execute([
+            'image_id' => $image_id,
+            'user_id'   => $user_id,
+            'comment' => $comment
+        ]);
+    }
+
+    /**
+     * Controlla se un utente ha già messo like a una foto
+     */
+    public static function checkLike($image_id, $user_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT id FROM likes WHERE image_id = :image_id AND user_id = :user_id");
+        $stmt->execute(['image_id' => $image_id, 'user_id' => $user_id]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Conta quanti like totali ha una foto
+     */
+    public static function countLikes($image_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT COUNT(*) as total FROM likes WHERE image_id = :image_id");
+        $stmt->execute(['image_id' => $image_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? (int)$result['total'] : 0;
+    }
+
+    /**
+     * Aggiunge un Like dal db Likes
+     */
+    public static function addLike($image_id, $user_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("INSERT INTO likes (image_id, user_id) VALUES (:image_id, :user_id)");
+        return $stmt->execute(['image_id' => $image_id, 'user_id' => $user_id]);
+    }
+
+    /**
+     * Rimuove un Like dal db Likes
+     */
+    public static function removeLike($image_id, $user_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("DELETE FROM likes WHERE image_id = :image_id AND user_id = :user_id");
+        return $stmt->execute(['image_id' => $image_id, 'user_id' => $user_id]);
+    }
+
+    /**
+     * ritorna una picture con il path dal db Images
+     */
     public static function getPictureToName($file_path) {
         $db = Database::getInstance();
         $stmt = $db->prepare("SELECT i.*, u.username 
@@ -40,6 +98,20 @@ class Photo {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * prendere i commenti di una picture dal db Comments
+     */
+    public static function getComment($image_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT c.*, u.username 
+                FROM comments c 
+                JOIN users u ON c.user_id = u.id 
+                WHERE c.image_id = :image_id 
+                ORDER BY c.created_at ASC");// ASC per leggerli in ordine cronologico
+        $stmt->execute(['image_id' => $image_id]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 	/**
      * Prende N picture dal db Images
      */
