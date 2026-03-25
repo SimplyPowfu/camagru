@@ -34,7 +34,8 @@ class AuthController extends Controller {
                 $_SESSION['user'] = [
                     'id' => $user['id'],
                     'username' => $user['username'],
-                    'email' => $user['email']
+                    'email' => $user['email'],
+                    'notify_comments' => $user['notify_comments']
                 ];
 
                 echo json_encode(['success' => true, 'message' => 'Login effettuato']);
@@ -143,6 +144,75 @@ class AuthController extends Controller {
             echo json_encode(['success' => true, 'message' => 'Password aggiornata!']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Errore o token scaduto']);
+        }
+    }
+
+    public function editProfile() {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (empty($data)) {
+            echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+            return;
+        }
+        $oldUsername = $_SESSION['user']['username'] ?? null;
+        if (!$oldUsername) {
+            echo json_encode(['success' => false, 'message' => 'Utente non autenticato']);
+            return;
+        }
+
+        $user = User::findByUsername($oldUsername);
+        $cleanData = [];
+        if (!empty($data['username'])) {
+            if (User::findByUsername($data['username'])) {
+                echo json_encode(['success' => false, 'message' => 'Username già utilizzato']);
+                return;
+            }
+            $cleanData['username'] = $data['username'];
+        }
+        if (!empty($data['email']) && $data['email'] !== $user['email']) {
+            if (User::findByEmail($data['email'])) {
+                echo json_encode(['success' => false, 'message' => 'Email già utilizzata']);
+                return;
+            }
+            $cleanData['email'] = $data['email'];
+        }
+        if (!empty($data['password'])) {
+            $password = $data['password'];
+            if (strlen($password) < 8 || !preg_match("/[a-z]/", $password) || !preg_match("/[0-9]/", $password)) {
+                echo json_encode(['success' => false, 'message' => 'La password non rispetta i requisiti']);
+                return;
+            }
+            if (password_verify($password, $user['password'])) {
+                echo json_encode(['success' => false, 'message' => 'La nuova password non può essere uguale alla vecchia']);
+                return;
+            }
+            $cleanData['password'] = password_hash($password, PASSWORD_BCRYPT);
+        }
+        // prendo il dato sempre attivo e controllo se e' diverso da quello salvato
+        $incomingNotify = isset($data['notify_comments']) && filter_var($data['notify_comments'], FILTER_VALIDATE_BOOLEAN);
+        $currentNotify = (bool)$user['notify_comments'];
+        if ($incomingNotify !== $currentNotify) {
+            $cleanData['notify_comments'] = $incomingNotify ? 1 : 0;
+        }
+        if (empty($cleanData)) {
+            echo json_encode(['success' => false, 'message' => 'Nessun dato da aggiornare']);
+            return;
+        }
+
+        try {
+            if (User::update($user['id'], $cleanData)) {
+                if (isset($cleanData['username']))
+                    $_SESSION['user']['username'] = $cleanData['username'];
+                if (isset($cleanData['email']))
+                    $_SESSION['user']['email'] = $cleanData['email'];
+                echo json_encode(['success' => true, 'message' => 'Valori aggiornati con successo']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Errore durante l\'aggiornamento']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Errore interno del server']);
         }
     }
 

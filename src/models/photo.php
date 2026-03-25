@@ -19,6 +19,20 @@ class Photo {
     }
 
     /**
+     * Elimina una picture dal db Images
+     */
+    public static function removePicture($user_id, $file_path) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("DELETE FROM images WHERE file_path = :file_path AND user_id = :user_id");
+        
+        $stmt->execute([
+            'user_id'   => $user_id,
+            'file_path' => $file_path,
+        ]);
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
      * Aggiunge un commento ad una picture al db Comments
      */
     public static function addComment($image_id, $user_id, $comment) {
@@ -31,6 +45,20 @@ class Photo {
             'user_id'   => $user_id,
             'comment' => $comment
         ]);
+    }
+
+    /**
+     * Ritorna l'email e la preferenza di notifica del proprietario dell'immagine
+     */
+    public static function getCreatorDetails($image_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT u.username, u.email, u.notify_comments 
+                FROM users u 
+                JOIN images i ON u.id = i.user_id 
+                WHERE i.id = :image_id 
+                LIMIT 1");
+        $stmt->execute(['image_id' => $image_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**

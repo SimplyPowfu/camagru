@@ -240,7 +240,6 @@ if (is_dir($filterDir)) {
     DOM.btnSave.addEventListener('click', async () => {
         const dataUrl = DOM.canvas.toDataURL('image/png');
         const messageElement = document.getElementById('message');
-        console.log(dataUrl);
 
         try {
             const response = await fetch('/api/save', {

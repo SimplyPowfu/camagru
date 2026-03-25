@@ -51,13 +51,6 @@ class User {
     }
 
     /**
-     * prende un file_path e la salva sul db
-     */
-    // public static function addPicture($id, $file_path) {
-        
-    // }
-
-    /**
      * Attiva un account tramite token
      */
     public static function activateByToken($token) {
@@ -110,5 +103,33 @@ class User {
         $stmt = $db->prepare("SELECT id FROM users WHERE reset_token = :token LIMIT 1");
         $stmt->execute(['token' => $token]);
         return $stmt->fetch() !== false;
+    }
+
+    /**
+     * Aggiorna dinamicamente i dati di un utente
+     */
+    public static function update($user_id, $data) {
+        $allowedColumns = ['username', 'email', 'password', 'notify_comments'];
+        
+        $setClauses = [];
+        $params = ['id' => $user_id];
+
+        // Costruiamo i pezzi della query "SET campo = :campo" dinamicamente
+        foreach ($data as $key => $value) {
+            // Se la chiave passata è nella nostra lista di colonne sicure...
+            if (in_array($key, $allowedColumns)) {
+                $setClauses[] = "$key = :$key";
+                $params[$key] = $value;
+            }
+        }
+
+        if (empty($setClauses))
+            return false;
+
+        $db = Database::getInstance();
+        $sql = "UPDATE users SET " . implode(', ', $setClauses) . " WHERE id = :id";
+        
+        $stmt = $db->prepare($sql);
+        return $stmt->execute($params);
     }
 }

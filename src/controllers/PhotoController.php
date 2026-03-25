@@ -57,6 +57,28 @@
 			}
 		}
 
+		public function remove() {
+			if (ob_get_length()) ob_clean();
+			header('Content-Type: application/json');
+			$data = json_decode(file_get_contents('php://input'), true);
+			$user = $_SESSION['user'] ?? null;
+			$file_path = $data['file_path'] ?? null;
+
+			if (!$user || !$file_path) {
+				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
+				return;
+			}
+			try {
+				if (Photo::removePicture($user['id'], $file_path))
+					echo json_encode(['success' => true, 'message' => 'Post Eliminato!']);
+				else
+					echo json_encode(['success' => false, 'message' => 'Impossibile eliminare il post']);
+			} catch (Exception $e) {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+			}
+		}
+
 		public function getPictureToName() {
 			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
@@ -197,8 +219,15 @@
 				return;
 			}
 			try {
-				if (Photo::addComment($image_id, $user['id'], $comment))
+				if (Photo::addComment($image_id, $user['id'], $comment)) {
+					//manda la mail al creatore
+					$creator = Photo::getCreatorDetails($image_id);
+					if ($creator && $creator['notify_comments'] == 1 && $creator['username'] !== $user['username']) {
+						$comUser = $user['username'];
+						sendEmail($creator['email'], "hanno commentato un tuo Post!", `$comUser ha commentato un tuo post: http://localhost:8080/post?post=$image_id`);
+					}
 					echo json_encode(['success' => true, 'message' => 'Commento Salvato!']);
+				}
 				else
 					echo json_encode(['success' => false, 'message' => 'Impossibile Salvare il commento']);
 			} catch (Exception $e) {

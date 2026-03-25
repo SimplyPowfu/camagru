@@ -16,6 +16,8 @@
 
 	// Routes get
 	$router->get('/', [$home, 'index']);
+	$router->get('/profile', [$home, 'profile'], 'AuthMiddleware');
+	
 		//Auth
 	$router->get('/login', [$auth, 'login']);//pagina login
 	$router->get('/reset', [$auth, 'reset']);//get da mail con reset_token
@@ -39,8 +41,10 @@
 	$router->post('/api/login', [$auth, 'handleLogin']);
 	$router->post('/api/reset_token', [$auth, 'forgotPassword']);
 	$router->post('/api/reset', [$auth, 'reinitPassword']);
-		//Protected
+	//Protected
+	$router->post('/api/edit/profile', [$auth, 'editProfile'], 'AuthMiddleware');
 	$router->post('/api/save', [$photo, 'save'], 'AuthMiddleware');//Save picture in uploads/ and db
+	$router->post('/api/remove', [$photo, 'remove'], 'AuthMiddleware');
 	$router->post('/api/post/toggleLike', [$photo, 'toggleLike'], 'AuthMiddleware');//Aggiunge o leva un Like ad una foto
 	$router->post('/api/post/addComment', [$photo, 'addComment'], 'AuthMiddleware');//Aggiunge un commento ad un post
 

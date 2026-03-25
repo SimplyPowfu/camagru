@@ -8,7 +8,7 @@
 				echo '<main style="flex: 1;">';
 					require __DIR__ . "/../views/pages/$name.php";
 				echo '</main>';
-				if (isset($_SESSION['user']))
+				if (isset($_SESSION['user']) && $name != 'profile')
 					require __DIR__ . "/../views/partials/side.php";
 			echo '</div>';
 			require __DIR__ . "/../views/partials/footer.php";
