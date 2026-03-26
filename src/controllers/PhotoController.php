@@ -14,42 +14,61 @@
 
 		public function save() {
 			if (ob_get_length()) ob_clean();
-			// Leggiamo il corpo della richiesta JSON
 			header('Content-Type: application/json');
 			$data = json_decode(file_get_contents('php://input'), true);
-			$user = $_SESSION['user'] ?? '';
-			$img = $data['image'] ?? '';
+			$user = $_SESSION['user'] ?? null;
+			$imgBase64 = $data['image'] ?? '';
 
-			if (empty($user) || empty($img)) {
+			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+				http_response_code(403);
+				echo json_encode(['success' => false, 'message' => 'Richiesta non autorizzata (CSRF)']);
+				return;
+			}
+			if (!$user || empty($imgBase64)) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
 				return;
 			}
-			// Rimuoviamo l'intestazione "data:image/png;base64,"
-			$img = str_replace('data:image/png;base64,', '', $img);
-			$img = str_replace(' ', '+', $img);
-			$fileData = base64_decode($img);
 
-			// Definiamo il percorso di salvataggio
-			$folder = __DIR__ . '/../../public/uploads/';
-			$fileName = 'camagru_' . time() . '.png';
-			$filePath = $folder . $fileName;
-			if (!is_dir($folder))
-				mkdir($folder, 0777, true);
-			if (!is_writable($folder)) {
-				echo json_encode([
-					'success' => false, 
-					'message' => 'ERRORE PERMESSI: La cartella non ha permessi.',
-				]);
+			//Pulizia e decodifica Base64
+			$imgData = preg_replace('#^data:image/\w+;base64,#i', '', $imgBase64);
+			$imgData = str_replace(' ', '+', $imgData);
+			$fileData = base64_decode($imgData);
+
+			if (!$fileData) {
+				echo json_encode(['success' => false, 'message' => 'Decodifica immagine fallita']);
 				return;
 			}
+
+			//CONTROLLO MIME TYPE
+			$finfo = new finfo(FILEINFO_MIME_TYPE);
+			$mimeType = $finfo->buffer($fileData);
+			$allowedTypes = [
+				'image/png'  => '.png',
+				'image/jpeg' => '.jpg',
+				'image/jpg'  => '.jpg'
+			];
+
+			if (!array_key_exists($mimeType, $allowedTypes)) {
+				echo json_encode(['success' => false, 'message' => 'Tipo di file non consentito: ' . $mimeType]);
+				return;
+			}
+
+			$extension = $allowedTypes[$mimeType];
+			$folder = __DIR__ . '/../../public/uploads/';
+			$fileName = 'camagru_' . bin2hex(random_bytes(8)) . $extension; // Nome più sicuro di time()
+			$filePath = $folder . $fileName;
+			if (!is_dir($folder)) mkdir($folder, 0777, true);
+
 			try {
 				if (file_put_contents($filePath, $fileData)) {
 					if (Photo::addPicture($user['id'], $fileName)) {
-						echo json_encode(['success' => true, 'message' => 'Post Salvato!']);
-					} else
-						echo json_encode(['success' => false, 'message' => 'Impossibile caricare il File']);
+						echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $fileName]);
+					} else {
+						unlink($filePath); // Cancella il file se il DB fallisce
+						echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+					}
 				} else {
-					echo json_encode(['success' => false, 'message' => 'Impossibile scrivere il file']);
+					echo json_encode(['success' => false, 'message' => 'Errore scrittura file']);
 				}
 			} catch (Exception $e) {
 				http_response_code(500);
@@ -63,14 +82,23 @@
 			$data = json_decode(file_get_contents('php://input'), true);
 			$user = $_SESSION['user'] ?? null;
 			$file_path = $data['file_path'] ?? null;
+			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+				http_response_code(403);
+				echo json_encode(['success' => false, 'message' => 'Richiesta non autorizzata (CSRF)']);
+				return;
+			}
 
 			if (!$user || !$file_path) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
 				return;
 			}
 			try {
-				if (Photo::removePicture($user['id'], $file_path))
+				if (Photo::removePicture($user['id'], $file_path)){
+					$folder = __DIR__ . '/../../public/uploads/';
+					$filePath = $folder . $file_path;	
+					unlink($filePath);
 					echo json_encode(['success' => true, 'message' => 'Post Eliminato!']);
+				}
 				else
 					echo json_encode(['success' => false, 'message' => 'Impossibile eliminare il post']);
 			} catch (Exception $e) {
@@ -145,7 +173,7 @@
 				}
 				echo json_encode([
 					'success' => true,
-					'Foto caricate!',
+					'message' => 'Foto caricate!',
 					'data' => $photos
 				]);
 			} catch (Exception $e) {
@@ -183,6 +211,11 @@
 			$data = json_decode(file_get_contents('php://input'), true);
 			$image_id = $data['image_id'] ?? null;
 			$user = $_SESSION['user'] ?? null;
+			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+				http_response_code(403);
+				echo json_encode(['success' => false, 'message' => 'Richiesta non autorizzata (CSRF)']);
+				return;
+			}
 
 			if (!$image_id || !$user) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
@@ -213,6 +246,11 @@
 			$image_id = $data['image_id'] ?? null;
 			$comment = $data['comment'] ?? null;
 			$user = $_SESSION['user'] ?? null;
+			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+				http_response_code(403);
+				echo json_encode(['success' => false, 'message' => 'Richiesta non autorizzata (CSRF)']);
+				return;
+			}
 
 			if (!$image_id || !$user || !$comment) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
@@ -222,11 +260,14 @@
 				if (Photo::addComment($image_id, $user['id'], $comment)) {
 					//manda la mail al creatore
 					$creator = Photo::getCreatorDetails($image_id);
-					if ($creator && $creator['notify_comments'] == 1 && $creator['username'] !== $user['username']) {
+					if ($creator && filter_var($creator['notify_comments'], FILTER_VALIDATE_BOOLEAN) == true && $creator['username'] !== $user['username']) {
 						$comUser = $user['username'];
-						sendEmail($creator['email'], "hanno commentato un tuo Post!", `$comUser ha commentato un tuo post: http://localhost:8080/post?post=$image_id`);
+						$post = Photo::getPictureToId($image_id);
+						$link = "http://localhost:8080/post?post=". $post;
+						sendEmail($creator['email'], "hanno commentato un tuo Post Camagru!", $comUser . " ha commentato un tuo post: " . $link . "\r\n\r\nHA COMMENTATO\r\n" . $user['username'] . ": " . $comment);
 					}
 					echo json_encode(['success' => true, 'message' => 'Commento Salvato!']);
+					exit;
 				}
 				else
 					echo json_encode(['success' => false, 'message' => 'Impossibile Salvare il commento']);

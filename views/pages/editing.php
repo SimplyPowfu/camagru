@@ -1,4 +1,9 @@
 <?php
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+?>
+<?php
 
 $filterDir = __DIR__ . '/../../public/filter/';
 $stickers = [];
@@ -42,6 +47,7 @@ if (is_dir($filterDir)) {
                 <button id="btn-webcam" class="btn-secondary" style="display: none;">Usa Webcam</button>
             </div>
             <div id="review-controls" style="display: none;">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <button id="btn-save" class="btn btn-success">Salva Immagine</button>
                 <button id="btn-discard" class="btn btn-danger">Scarta e Riprova</button>
             </div>
@@ -240,12 +246,13 @@ if (is_dir($filterDir)) {
     DOM.btnSave.addEventListener('click', async () => {
         const dataUrl = DOM.canvas.toDataURL('image/png');
         const messageElement = document.getElementById('message');
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
         try {
             const response = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: dataUrl })
+                body: JSON.stringify({ image: dataUrl, csrf_token: csrfToken })
             });
 
             const result = await response.json();

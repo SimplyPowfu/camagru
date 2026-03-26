@@ -115,6 +115,14 @@ class Photo {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public static function getPictureToId($image_id) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT file_path FROM images WHERE id = :image_id");
+        $stmt->execute(['image_id' => $image_id]);
+        
+        return $stmt->fetchColumn();
+    }
+
     /**
      * Prende le picture di uno user dal db Images
      */

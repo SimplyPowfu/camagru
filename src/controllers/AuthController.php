@@ -30,7 +30,7 @@ class AuthController extends Controller {
                     echo json_encode(['success' => false, 'message' => 'Account non attivato']);
                     return;
                 }
-
+    
                 $_SESSION['user'] = [
                     'id' => $user['id'],
                     'username' => $user['username'],
@@ -151,6 +151,11 @@ class AuthController extends Controller {
         if (ob_get_length()) ob_clean();
         header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Richiesta non autorizzata (CSRF)']);
+            return;
+        }
         if (empty($data)) {
             echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
             return;

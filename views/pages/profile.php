@@ -1,9 +1,12 @@
+<?php
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+?>
 <h1>Profile</h1>
-<?php if (isset($_SESSION['user'])): ?>
-    <p>Ciao, <strong><?php echo htmlspecialchars($_SESSION['user']['username']); ?></strong>!</p>
-<?php endif; ?>
 <!-- Edit user data -->
 <form id="editForm">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
     <div>
         <label>Username</label>
         <input type="text" name="username">
@@ -115,12 +118,13 @@
         // Azione: SÌ, Elimina
         btnConfirm.onclick = async () => {
             if (!fileToDelete) return;
+            const token = document.querySelector('input[name="csrf_token"]').value;
 
             try {
 				const response = await fetch('/api/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({file_path: fileToDelete})
+                    body: JSON.stringify({file_path: fileToDelete, csrf_token: token})
                 });
                 const result = await response.json();
 
@@ -130,7 +134,7 @@
                     fileToDelete = null;
                     wrapperToRemove = null;
                 } else {
-                    console.error("Errore dal server:", result.message);
+                    console.error("Errore:", result.message);
                 }
             } catch (error) {
                 console.error("Errore durante la richiesta di eliminazione:", error);
