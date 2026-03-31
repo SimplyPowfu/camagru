@@ -15,9 +15,11 @@
 		public function save() {
 			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
+			
 			$data = json_decode(file_get_contents('php://input'), true);
 			$user = $_SESSION['user'] ?? null;
 			$imgBase64 = $data['image'] ?? '';
+			$stickersData = $data['stickers'] ?? [];
 
 			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
 				http_response_code(403);
@@ -29,7 +31,6 @@
 				return;
 			}
 
-			//Pulizia e decodifica Base64
 			$imgData = preg_replace('#^data:image/\w+;base64,#i', '', $imgBase64);
 			$imgData = str_replace(' ', '+', $imgData);
 			$fileData = base64_decode($imgData);
@@ -39,7 +40,6 @@
 				return;
 			}
 
-			//CONTROLLO MIME TYPE
 			$finfo = new finfo(FILEINFO_MIME_TYPE);
 			$mimeType = $finfo->buffer($fileData);
 			$allowedTypes = [
@@ -53,26 +53,72 @@
 				return;
 			}
 
-			$extension = $allowedTypes[$mimeType];
 			$folder = __DIR__ . '/../../public/uploads/';
-			$fileName = 'camagru_' . bin2hex(random_bytes(8)) . $extension; // Nome più sicuro di time()
+			$filterDir = __DIR__ . '/../../public/filter/';
+			$fileName = 'camagru_' . bin2hex(random_bytes(8)) . '.png';
 			$filePath = $folder . $fileName;
+
 			if (!is_dir($folder)) mkdir($folder, 0777, true);
 
 			try {
-				if (file_put_contents($filePath, $fileData)) {
+				$baseImage = imagecreatefromstring($fileData);
+				if (!$baseImage) {
+					echo json_encode(['success' => false, 'message' => 'Impossibile elaborare l\'immagine di base']);
+					return;
+				}
+
+				imagealphablending($baseImage, true);
+				imagesavealpha($baseImage, true);
+
+				if (is_array($stickersData)) {
+					foreach ($stickersData as $sticker) {
+						$safeFilename = basename($sticker['filename']);
+						$stickerPath = $filterDir . $safeFilename;
+
+						if (file_exists($stickerPath) && mime_content_type($stickerPath) === 'image/png') {
+							$stickerImg = imagecreatefrompng($stickerPath);
+							
+							if ($stickerImg) {
+								imagealphablending($stickerImg, true);
+								imagesavealpha($stickerImg, true);
+
+								$origWidth = imagesx($stickerImg);
+								$origHeight = imagesy($stickerImg);
+								
+								$targetWidth = (int)$sticker['w'];
+								$ratio = $origHeight / $origWidth;
+								$targetHeight = (int)($targetWidth * $ratio);
+
+								$targetX = (int)$sticker['x'];
+								$targetY = (int)$sticker['y'];
+
+								imagecopyresampled(
+									$baseImage, $stickerImg,
+									$targetX, $targetY, // Coordinate Destinazione
+									0, 0, // Coordinate Sorgente
+									$targetWidth, $targetHeight, // Dimensioni Destinazione
+									$origWidth, $origHeight // Dimensioni Sorgente
+								);
+								imagedestroy($stickerImg);
+							}
+						}
+					}
+				}
+				$saveSuccess = imagepng($baseImage, $filePath);
+				imagedestroy($baseImage);
+				if ($saveSuccess) {
 					if (Photo::addPicture($user['id'], $fileName)) {
 						echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $fileName]);
 					} else {
-						unlink($filePath); // Cancella il file se il DB fallisce
-						echo json_encode(['success' => false, 'message' => 'Errore nel database']);
+						unlink($filePath);
+						echo json_encode(['success' => false, 'message' => 'Errore nel salvataggio sul database']);
 					}
 				} else {
-					echo json_encode(['success' => false, 'message' => 'Errore scrittura file']);
+					echo json_encode(['success' => false, 'message' => 'Errore nella creazione del file finale']);
 				}
 			} catch (Exception $e) {
 				http_response_code(500);
-				echo json_encode(['success' => false, 'message' => 'Errore interno']);
+				echo json_encode(['success' => false, 'message' => 'Errore interno del server durante il processamento dell\'immagine']);
 			}
 		}
 
@@ -142,10 +188,6 @@
 			}
 			try {
 				$photos = Photo::getNamePictures($username);
-				if (empty($photos)) {
-					echo json_encode(['success' => false, 'message' => 'Nessuna foto trovata']);
-					return;
-				}
 				echo json_encode([
 					'success' => true, 
 					'message' => 'Foto caricate!',
@@ -160,17 +202,13 @@
 		public function getPictures() {
 			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
-			$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+			$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
 			if (empty($limit)) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
 				return;
 			}
 			try {
 				$photos = Photo::getPictures($limit);
-				if (empty($photos)) {
-					echo json_encode(['success' => false, 'message' => 'Nessuna foto trovata']);
-					return;
-				}
 				echo json_encode([
 					'success' => true,
 					'message' => 'Foto caricate!',

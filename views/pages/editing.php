@@ -119,7 +119,6 @@ if (is_dir($filterDir)) {
 
     // --- LOGICA DRAG & RESIZE ---
     function setupInteractions(imgElement, id) {
-        // Drag
         imgElement.addEventListener('mousedown', (e) => {
             e.preventDefault();
             AppState.draggingSticker = id;
@@ -128,18 +127,16 @@ if (is_dir($filterDir)) {
             AppState.dragOffset.y = e.clientY - rect.top;
         });
 
-        // Resize con rotellina
         imgElement.addEventListener('wheel', (e) => {
             e.preventDefault();
             const data = AppState.activeStickers.get(id);
             const scaleAmount = 10;
             
-            if (e.deltaY < 0) { // Scroll su = Ingrandisci
-                data.w = Math.min(data.w + scaleAmount, 500); // Max 500px
-            } else { // Scroll giù = Rimpicciolisci
-                data.w = Math.max(data.w - scaleAmount, 30);  // Min 30px
+            if (e.deltaY < 0) {
+                data.w = Math.min(data.w + scaleAmount, 500);
+            } else {
+                data.w = Math.max(data.w - scaleAmount, 30);
             }
-            
             imgElement.style.width = data.w + 'px';
         });
     }
@@ -214,9 +211,10 @@ if (is_dir($filterDir)) {
         e.target.value = null;
     });
 
-    // --- SNAPSHOT ---
+    // --- SNAPSHOT (Disegna tutto sul canvas visibile solo per l'anteprima) ---
     DOM.btnSnap.addEventListener('click', async () => {
         DOM.ctx.clearRect(0, 0, DOM.canvas.width, DOM.canvas.height);
+        
         if (AppState.source === 'webcam') {
             DOM.ctx.save();
             DOM.ctx.scale(-1, 1);
@@ -226,6 +224,7 @@ if (is_dir($filterDir)) {
             DOM.ctx.drawImage(DOM.filePreview, 0, 0, DOM.canvas.width, DOM.canvas.height);
         }
 
+        // Disegna sticker sopra per preview
         const promises = Array.from(AppState.activeStickers.values()).map(data => {
             return new Promise(res => {
                 const img = new Image();
@@ -243,23 +242,56 @@ if (is_dir($filterDir)) {
         renderUI();
     });
 
+    // --- SAVE (Invia SOLO base e array coordinate) ---
     DOM.btnSave.addEventListener('click', async () => {
-        const dataUrl = DOM.canvas.toDataURL('image/png');
-        const messageElement = document.getElementById('message');
+        // 1. Crea un canvas temporaneo e cattura SOLO la foto originale
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = 640;
+        baseCanvas.height = 480;
+        const bCtx = baseCanvas.getContext('2d');
+        
+        if (AppState.source === 'webcam') {
+            bCtx.save();
+            bCtx.scale(-1, 1);
+            bCtx.drawImage(DOM.video, -640, 0, 640, 480);
+            bCtx.restore();
+        } else {
+            bCtx.drawImage(DOM.filePreview, 0, 0, 640, 480);
+        }
+        const baseImageData = baseCanvas.toDataURL('image/png');
+
+        // 2. Prepara la lista degli sticker da mandare
+        const stickersData = Array.from(AppState.activeStickers.values()).map(s => {
+            // Estraiamo solo il nome del file dal percorso per maggiore sicurezza
+            const filename = s.src.split('/').pop();
+            return {
+                filename: filename,
+                x: s.x,
+                y: s.y,
+                w: s.w
+            };
+        });
+
         const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        const messageElement = document.getElementById('message');
 
         try {
             const response = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: dataUrl, csrf_token: csrfToken })
+                // Inviamo base + stickers + token
+                body: JSON.stringify({ 
+                    image: baseImageData, 
+                    stickers: stickersData,
+                    csrf_token: csrfToken 
+                })
             });
 
             const result = await response.json();
             if (result.success) {
                 messageElement.style.color = 'green';
                 messageElement.textContent = result.message;
-                AppState.phase = 'live'; //Torna alla modalità scatto
+                AppState.phase = 'live'; 
                 renderUI();
                 if (typeof window.loadUserGallery === 'function') {
                     window.loadUserGallery();
@@ -274,9 +306,9 @@ if (is_dir($filterDir)) {
             console.error("Errore nell'invio:", error);
         }
     });
+
     DOM.btnDiscard.addEventListener('click', () => { AppState.phase = 'live'; renderUI(); });
 
-    // inizializzazione della pagina
     initWebcam();
 })();
 </script>
