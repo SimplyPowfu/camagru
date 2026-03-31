@@ -2,57 +2,72 @@
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
-?>
-<?php
 
-$filterDir = __DIR__ . '/../../public/filter/';
-$stickers = [];
-
-if (is_dir($filterDir)) {
-    $files = scandir($filterDir);
-    foreach ($files as $file) {
-        if (pathinfo($file, PATHINFO_EXTENSION) === 'png') {
-            $stickers[] = '/filter/' . $file;
+    $filterDir = __DIR__ . '/../../public/filter/';
+    $stickers = [];
+    if (is_dir($filterDir)) {
+        $files = scandir($filterDir);
+        foreach ($files as $file) {
+            if (pathinfo($file, PATHINFO_EXTENSION) === 'png') {
+                $stickers[] = '/filter/' . $file;
+            }
         }
     }
-}
 ?>
 
-<div class="editing-container">
+<div class="card">
     <div class="main-edit-area">
-        <h2>Editor Avanzato</h2>
-        <p>Trascina per spostare o Rotellina per ridimensionare</p>
+        <h2 style="color: var(--primary); font-weight: 800; margin-bottom: 5px;">Editor Avanzato</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-info"></i> Trascina per spostare o usa la rotellina per ridimensionare gli sticker.
+        </p>
 
-        <div id="preview-container" class="preview-box">
-            <video id="video" autoplay playsinline></video>
-            <img id="file-preview" src="#" alt="Anteprima File" style="display: none;">
-            <div id="sticker-overlay"></div>
-            <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+        <div id="preview-container" class="preview-box" style="position: relative; width: 100%; max-width: 640px; aspect-ratio: 4/3; background: #000; margin: 0 auto 20px auto; overflow: hidden; border-radius: var(--radius); border: 2px solid var(--border);">
+            <video id="video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+            <img id="file-preview" src="#" alt="Anteprima" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+            <div id="sticker-overlay" style="position: absolute; inset: 0; pointer-events: none;"></div>
+            <canvas id="canvas" width="640" height="480" style="display: none; width: 100%; height: 100%;"></canvas>
+            
+            <div id="save-loader" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
+                <p style="margin-top: 15px; font-weight: 700; color: var(--text-main);">Salvataggio in corso...</p>
+            </div>
         </div>
 
         <div class="sticker-selector">
-            <h3>Seleziona gli sticker</h3>
+            <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--text-main);">1. Scegli i tuoi sticker</h3>
             <div class="sticker-list">
                 <?php foreach ($stickers as $index => $src): ?>
-                    <img src="<?= htmlspecialchars($src) ?>" class="sticker-opt" data-id="<?= $index ?>">
+                    <img src="<?= htmlspecialchars($src, ENT_QUOTES, 'UTF-8') ?>" class="sticker-opt" data-id="<?= $index ?>" title="Clicca per aggiungere">
                 <?php endforeach; ?>
             </div>
         </div>
 
         <div class="controls">
-            <div id="live-controls">
-                <button id="btn-snap" class="btn" disabled>Scatta / Crea</button>
-                <label for="file-input" class="btn-secondary">Scegli file dal PC</label>
+            <div id="live-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="btn-snap" class="btn btn-primary" disabled>
+                    <i class="fa-solid fa-camera"></i> Scatta / Crea
+                </button>
+                <label for="file-input" class="btn btn-secondary">
+                    <i class="fa-solid fa-upload"></i> Carica Foto
+                </label>
                 <input type="file" id="file-input" accept="image/*" style="display: none;">
-                <button id="btn-webcam" class="btn-secondary" style="display: none;">Usa Webcam</button>
+                <button id="btn-webcam" class="btn btn-secondary" style="display: none;">
+                    <i class="fa-solid fa-video"></i> Usa Webcam
+                </button>
             </div>
-            <div id="review-controls" style="display: none;">
+
+            <div id="review-controls" style="display: none; gap: 10px;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                <button id="btn-save" class="btn btn-success">Salva Immagine</button>
-                <button id="btn-discard" class="btn btn-danger">Scarta e Riprova</button>
+                <button id="btn-save" class="btn btn-success">
+                    <i class="fa-solid fa-check"></i> Conferma e Salva
+                </button>
+                <button id="btn-discard" class="btn btn-danger">
+                    <i class="fa-solid fa-trash"></i> Scarta
+                </button>
             </div>
         </div>
-        <p id="message" style="margin-top: 5px;"></p>
+        <p id="message" style="margin-top: 15px; font-weight: 600;"></p>
     </div>
 </div>
 
@@ -82,14 +97,16 @@ if (is_dir($filterDir)) {
         liveControls: document.getElementById('live-controls'),
         reviewControls: document.getElementById('review-controls'),
         btnSave: document.getElementById('btn-save'),
-        btnDiscard: document.getElementById('btn-discard')
+        btnDiscard: document.getElementById('btn-discard'),
+        saveLoader: document.getElementById('save-loader'),
+        message: document.getElementById('message')
     };
 
     function renderUI() {
         if (AppState.phase === 'live') {
             DOM.canvas.style.display = 'none';
             DOM.stickerOverlay.style.display = 'block';
-            DOM.liveControls.style.display = 'block';
+            DOM.liveControls.style.display = 'flex';
             DOM.reviewControls.style.display = 'none';
             if (AppState.source === 'webcam') {
                 DOM.video.style.display = 'block';
@@ -106,7 +123,7 @@ if (is_dir($filterDir)) {
             DOM.stickerOverlay.style.display = 'none';
             DOM.canvas.style.display = 'block';
             DOM.liveControls.style.display = 'none';
-            DOM.reviewControls.style.display = 'block';
+            DOM.reviewControls.style.display = 'flex';
         }
 
         DOM.stickerOpts.forEach(opt => {
@@ -117,7 +134,12 @@ if (is_dir($filterDir)) {
         DOM.btnSnap.disabled = !(AppState.activeStickers.size > 0 && isReady);
     }
 
-    // --- LOGICA DRAG & RESIZE ---
+    function updateStickerDOM(el, data) {
+        el.style.left = (data.x / 640 * 100) + '%';
+        el.style.top = (data.y / 480 * 100) + '%';
+        el.style.width = (data.w / 640 * 100) + '%';
+    }
+
     function setupInteractions(imgElement, id) {
         imgElement.addEventListener('mousedown', (e) => {
             e.preventDefault();
@@ -130,32 +152,37 @@ if (is_dir($filterDir)) {
         imgElement.addEventListener('wheel', (e) => {
             e.preventDefault();
             const data = AppState.activeStickers.get(id);
-            const scaleAmount = 10;
+            const scaleAmount = 25;
             
-            if (e.deltaY < 0) {
-                data.w = Math.min(data.w + scaleAmount, 500);
-            } else {
-                data.w = Math.max(data.w - scaleAmount, 30);
-            }
-            imgElement.style.width = data.w + 'px';
+            if (e.deltaY < 0) data.w = Math.min(data.w + scaleAmount, 1000); // Permetti resize molto grandi
+            else data.w = Math.max(data.w - scaleAmount, 30);
+            updateStickerDOM(imgElement, data);
         });
     }
 
     window.addEventListener('mousemove', (e) => {
         if (!AppState.draggingSticker) return;
+        
         const containerRect = DOM.previewBox.getBoundingClientRect();
-        const data = AppState.activeStickers.get(AppState.draggingSticker);
         const el = document.querySelector(`.dynamic-sticker[data-id="${AppState.draggingSticker}"]`);
-
-        data.x = e.clientX - containerRect.left - AppState.dragOffset.x;
-        data.y = e.clientY - containerRect.top - AppState.dragOffset.y;
-        el.style.left = data.x + 'px';
-        el.style.top = data.y + 'px';
+        const data = AppState.activeStickers.get(AppState.draggingSticker);
+        
+        const scaleX = 640 / containerRect.width;
+        const scaleY = 480 / containerRect.height;
+        
+        // Posizione in pixel rispetto allo schermo
+        let newX_px = e.clientX - containerRect.left - AppState.dragOffset.x;
+        let newY_px = e.clientY - containerRect.top - AppState.dragOffset.y;
+        
+        // Convertiamo le coordinate dello schermo in coordinate interne 640x480
+        data.x = newX_px * scaleX;
+        data.y = newY_px * scaleY;
+        
+        updateStickerDOM(el, data);
     });
 
     window.addEventListener('mouseup', () => { AppState.draggingSticker = null; });
 
-    // --- CLICK STICKER LIST ---
     DOM.stickerOpts.forEach(opt => {
         opt.addEventListener('click', function() {
             const id = this.dataset.id;
@@ -163,25 +190,27 @@ if (is_dir($filterDir)) {
                 AppState.activeStickers.delete(id);
                 document.querySelector(`.dynamic-sticker[data-id="${id}"]`)?.remove();
             } else {
-                const data = { src: this.src, x: 245, y: 165, w: 150 }; 
+                // Genera quasi al centro
+                const data = { src: this.src, x: 220, y: 140, w: 200 };
                 AppState.activeStickers.set(id, data);
-
+                
                 const img = document.createElement('img');
                 img.src = data.src;
                 img.classList.add('dynamic-sticker');
                 img.dataset.id = id;
-                img.style.left = data.x + 'px';
-                img.style.top = data.y + 'px';
-                img.style.width = data.w + 'px';
+                img.style.position = 'absolute';
+                img.style.pointerEvents = 'all'; 
+                img.style.cursor = 'grab';
+                img.style.zIndex = '20';
                 
                 setupInteractions(img, id);
+                updateStickerDOM(img, data);
                 DOM.stickerOverlay.appendChild(img);
             }
             renderUI();
         });
     });
 
-    // --- WEBCAM & FILE ---
     async function initWebcam() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -194,37 +223,52 @@ if (is_dir($filterDir)) {
         }
         renderUI();
     }
-
     DOM.btnWebcam.addEventListener('click', () => { AppState.source = 'webcam'; renderUI(); });
     DOM.fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                DOM.filePreview.src = ev.target.result;
-                AppState.source = 'file';
-                AppState.isFileLoaded = true;
-                renderUI();
+                const img = new Image();
+                img.onload = () => {
+                    const tCanv = document.createElement('canvas');
+                    tCanv.width = 640; 
+                    tCanv.height = 480;
+                    const tCtx = tCanv.getContext('2d');
+                    
+                    const ratio = Math.max(640 / img.width, 480 / img.height);
+                    const drawW = img.width * ratio;
+                    const drawH = img.height * ratio;
+                    const offsetX = (640 - drawW) / 2;
+                    const offsetY = (480 - drawH) / 2;
+                    
+                    tCtx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                    
+                    DOM.filePreview.src = tCanv.toDataURL('image/jpeg', 0.9);
+                    AppState.source = 'file';
+                    AppState.isFileLoaded = true;
+                    renderUI();
+                };
+                img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         }
         e.target.value = null;
     });
 
-    // --- SNAPSHOT (Disegna tutto sul canvas visibile solo per l'anteprima) ---
     DOM.btnSnap.addEventListener('click', async () => {
+        DOM.message.textContent = '';
         DOM.ctx.clearRect(0, 0, DOM.canvas.width, DOM.canvas.height);
         
         if (AppState.source === 'webcam') {
             DOM.ctx.save();
             DOM.ctx.scale(-1, 1);
-            DOM.ctx.drawImage(DOM.video, -DOM.canvas.width, 0, DOM.canvas.width, DOM.canvas.height);
+            DOM.ctx.drawImage(DOM.video, -640, 0, 640, 480);
             DOM.ctx.restore();
         } else {
-            DOM.ctx.drawImage(DOM.filePreview, 0, 0, DOM.canvas.width, DOM.canvas.height);
+            DOM.ctx.drawImage(DOM.filePreview, 0, 0, 640, 480);
         }
 
-        // Disegna sticker sopra per preview
         const promises = Array.from(AppState.activeStickers.values()).map(data => {
             return new Promise(res => {
                 const img = new Image();
@@ -242,73 +286,70 @@ if (is_dir($filterDir)) {
         renderUI();
     });
 
-    // --- SAVE (Invia SOLO base e array coordinate) ---
     DOM.btnSave.addEventListener('click', async () => {
-        // 1. Crea un canvas temporaneo e cattura SOLO la foto originale
+        DOM.saveLoader.style.display = 'flex';
+        DOM.message.textContent = '';
+        DOM.btnSave.disabled = true;
+        
         const baseCanvas = document.createElement('canvas');
-        baseCanvas.width = 640;
-        baseCanvas.height = 480;
+        baseCanvas.width = 640; baseCanvas.height = 480;
         const bCtx = baseCanvas.getContext('2d');
         
         if (AppState.source === 'webcam') {
-            bCtx.save();
-            bCtx.scale(-1, 1);
+            bCtx.save(); bCtx.scale(-1, 1);
             bCtx.drawImage(DOM.video, -640, 0, 640, 480);
             bCtx.restore();
         } else {
             bCtx.drawImage(DOM.filePreview, 0, 0, 640, 480);
         }
-        const baseImageData = baseCanvas.toDataURL('image/png');
 
-        // 2. Prepara la lista degli sticker da mandare
-        const stickersData = Array.from(AppState.activeStickers.values()).map(s => {
-            // Estraiamo solo il nome del file dal percorso per maggiore sicurezza
-            const filename = s.src.split('/').pop();
-            return {
-                filename: filename,
-                x: s.x,
-                y: s.y,
-                w: s.w
-            };
-        });
-
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        const messageElement = document.getElementById('message');
+        const stickersData = Array.from(AppState.activeStickers.values()).map(s => ({
+            filename: s.src.split('/').pop(),
+            x: s.x,
+            y: s.y,
+            w: s.w
+        }));
 
         try {
             const response = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Inviamo base + stickers + token
                 body: JSON.stringify({ 
-                    image: baseImageData, 
+                    image: baseCanvas.toDataURL('image/png'), 
                     stickers: stickersData,
-                    csrf_token: csrfToken 
+                    csrf_token: document.querySelector('input[name="csrf_token"]').value
                 })
             });
 
             const result = await response.json();
             if (result.success) {
-                messageElement.style.color = 'green';
-                messageElement.textContent = result.message;
-                AppState.phase = 'live'; 
+                DOM.message.style.color = 'var(--success)';
+                DOM.message.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + result.message;
+                AppState.phase = 'live';
+                AppState.activeStickers.clear();
+                document.querySelectorAll('.dynamic-sticker').forEach(el => el.remove());
                 renderUI();
-                if (typeof window.loadUserGallery === 'function') {
-                    window.loadUserGallery();
-                }
+                if (typeof window.loadUserGallery === 'function') window.loadUserGallery();
             } else {
-                messageElement.style.color = 'red';
-                messageElement.textContent = result.message;
+                DOM.message.style.color = 'var(--danger)';
+                DOM.message.textContent = result.message;
             }
         } catch (error) {
-            messageElement.style.color = 'red';
-            messageElement.textContent = 'Errore di connessione al server.';
-            console.error("Errore nell'invio:", error);
+            DOM.message.style.color = 'var(--danger)';
+            DOM.message.textContent = 'Errore di connessione.';
+        } finally {
+            DOM.saveLoader.style.display = 'none';
+            DOM.btnSave.disabled = false;
         }
     });
 
-    DOM.btnDiscard.addEventListener('click', () => { AppState.phase = 'live'; renderUI(); });
+    DOM.btnDiscard.addEventListener('click', () => { 
+        DOM.message.textContent = '';
+        AppState.phase = 'live'; 
+        renderUI(); 
+    });
 
     initWebcam();
+    renderUI();
 })();
 </script>

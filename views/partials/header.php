@@ -4,18 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camagru</title>
-    <link rel="stylesheet" href="/css/style.css"> 
+    <link rel="stylesheet" href="/css/main.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <body>
-    <nav>
-        <a href="/">Home</a>
-        <?php if (isset($_SESSION['user'])): ?>
-            <a href="/editing">Editor</a>
-            <a href="/profile">Profile</a>
-            <a href="/logout">Logout</a>
-        <?php else: ?>
-            <a href="/login">Login</a>
-        <?php endif; ?>
-    </nav>
-    <hr>
+
+<div class="app-container">
+    <header>
+        <div class="logo">
+            <a href="/" style="text-decoration: none; color: inherit;">
+                CAMAGRU<span style="color: var(--secondary)">.</span>
+            </a>
+        </div>
+        
+        <nav>
+            <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+            
+            <?php if (isset($_SESSION['user'])): ?>
+                <a href="/editing"><i class="fa-solid fa-camera"></i> Editor</a>
+                <a href="/profile"><i class="fa-solid fa-user"></i> Profilo</a>
+                <a href="/logout" class="btn btn-primary" style="padding: 5px 15px; color: white;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            <?php else: ?>
+                <a href="/login" class="btn btn-primary" style="padding: 5px 15px; color: white;">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    Login
+                </a>
+            <?php endif; ?>
+        </nav>
+    </header>

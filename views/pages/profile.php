@@ -3,97 +3,116 @@
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
 ?>
-<h1>Profile</h1>
-<!-- Edit user data -->
-<form id="editForm">
-    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <div>
-        <label>Username</label>
-        <input type="text" name="username">
-    </div>
-    <div>
-        <label>Email</label>
-        <input type="email" name="email">
-    </div>
-    <div>
-        <label>Password</label>
-        <input type="password" name="password">
-    </div>
-    <div style="margin-top: 15px; margin-bottom: 15px;">
-        <label style="cursor: pointer;">
-            <input type="checkbox" name="notify_comments" id="notify_comments"
-                <?= (isset($_SESSION['user']['notify_comments']) && $_SESSION['user']['notify_comments'] == 1) ? 'checked' : '' ?>>
-            Inviami un'email quando ricevo un commento
-        </label>
-    </div>
-    <button type="submit">Submit</button>
-</form>
-<p id="message" style="margin-top: 5px;"></p>
 
-<div id="delete-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h4>Sei sicuro?</h4>
-        <p>Vuoi davvero eliminare questa foto? L'azione è irreversibile.</p>
-        <div class="modal-buttons">
-            <button id="btn-cancel-delete" class="btn btn-secondary">No, annulla</button>
-            <button id="btn-confirm-delete" class="btn btn-danger">Sì, elimina</button>
-        </div>
+<div style="display: flex; flex-direction: column; gap: 30px;">
+
+    <div class="card">
+        <h2 style="color: var(--primary); font-weight: 800; margin-bottom: 20px;">
+            <i class="fa-solid fa-images"></i> I Miei Post
+        </h2>
+        <div id="home-gallery" class="profile-grid">
+            </div>
+    </div>
+
+    <div class="card">
+        <h2 style="color: var(--primary); font-weight: 800; margin-bottom: 20px;">
+            <i class="fa-solid fa-user-gear"></i> Impostazioni Profilo
+        </h2>
+        
+        <form id="editForm" autocomplete="off" style="max-width: 500px;">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+            
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" autocomplete="off" placeholder="Cambia Username">
+            </div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" autocomplete="off" placeholder="Cambia Email">
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" autocomplete="new-password" placeholder="Cambia Password">
+            </div>
+            
+            <div style="margin-top: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text-main);">
+                    <input type="checkbox" name="notify_comments" id="notify_comments" style="width: 18px; height: 18px; cursor: pointer;"
+                        <?= (isset($_SESSION['user']['notify_comments']) && (int)$_SESSION['user']['notify_comments'] === 1) ? 'checked' : '' ?>>
+                    Inviami un'email quando ricevo un commento
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
+                <i class="fa-solid fa-floppy-disk"></i> Salva Modifiche
+            </button>
+        </form>
+        <p id="message" style="margin-top: 15px; font-weight: 600;"></p>
     </div>
 </div>
 
-<aside class="gallery">
-    <h3>I miei post</h3>
-    <div id="home-gallery"></div>
-</aside>
+<div id="delete-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content card" style="border: none;">
+        <i class="fa-solid fa-triangle-exclamation fa-3x" style="color: var(--danger); margin-bottom: 15px;"></i>
+        <h3 style="margin-bottom: 10px; color: var(--text-main);">Elimina Post</h3>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">Sei sicuro di voler eliminare questa foto? L'azione è irreversibile.</p>
+        
+        <div class="modal-buttons" style="display: flex; gap: 15px; justify-content: center;">
+            <button id="btn-cancel-delete" class="btn btn-secondary">Annulla</button>
+            <button id="btn-confirm-delete" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Elimina</button>
+        </div>
+    </div>
+</div>
 
 <script>
     let fileToDelete = null;
     let wrapperToRemove = null;
 
     window.loadUserGallery = async function() {
-        const sideGallery = document.getElementById('home-gallery');
-        if (!sideGallery) return;
+        const profileGallery = document.getElementById('home-gallery');
+        if (!profileGallery) return;
 
-        const username = "<?= $_SESSION['user']['username'] ?? '' ?>"; 
+        const username = "<?= htmlspecialchars($_SESSION['user']['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>"; 
         if (!username) return;
 
         try {
-            const response = await fetch(`/api/user/picture?username=${username}`);
+            const response = await fetch(`/api/user/picture?username=${encodeURIComponent(username)}`);
             const result = await response.json();
 
             if (result.success && result.data) {
-                sideGallery.innerHTML = '';
+                profileGallery.innerHTML = '';
+                
+                if (result.data.length === 0) {
+                    profileGallery.innerHTML = '<p style="color: var(--text-muted); font-style: italic;">Non hai ancora scattato nessuna foto.</p>';
+                    return;
+                }
                 
                 result.data.forEach(photo => {
-                    // Creiamo il Wrapper
                     const wrapper = document.createElement('div');
                     wrapper.className = 'post-wrapper';
 
-                    // Creiamo l'Immagine
                     const img = document.createElement('img');
                     img.src = '/uploads/' + photo.file_path;
-                    img.onclick = () => window.location.href = `/post?post=${photo.file_path}`;
-                    img.style.cursor = 'pointer';
+                    img.alt = "Mio Post";
+                    img.loading = "lazy";
+                    img.onclick = () => window.location.href = `/post?post=${encodeURIComponent(photo.file_path)}`;
 
-                    // Creiamo l'icona del Cestino (FontAwesome)
-                    const trash = document.createElement('i');
-                    trash.className = 'fa-solid fa-trash trash-icon';
+                    const trash = document.createElement('div');
+                    trash.className = 'trash-icon';
+                    trash.innerHTML = '<i class="fa-solid fa-trash"></i>';
                     
                     trash.onclick = (e) => {
-                        e.stopPropagation(); // PROPER TRICK: Evita che il click "passi" all'immagine sotto
-                        
-                        // Salviamo i riferimenti per usarli dopo
+                        e.stopPropagation(); // Evita di aprire il post
                         fileToDelete = photo.file_path;
                         wrapperToRemove = wrapper;
-                        
-                        // Mostriamo il popup
                         document.getElementById('delete-modal').style.display = 'flex';
                     };
 
-                    // Assembliamo il tutto
                     wrapper.appendChild(img);
                     wrapper.appendChild(trash);
-                    sideGallery.appendChild(wrapper);
+                    profileGallery.appendChild(wrapper);
                 });
             }
         } catch (error) {
@@ -104,24 +123,26 @@
     document.addEventListener('DOMContentLoaded', () => {
         window.loadUserGallery();
 
+        // --- Logica Modale Eliminazione ---
         const modal = document.getElementById('delete-modal');
         const btnCancel = document.getElementById('btn-cancel-delete');
         const btnConfirm = document.getElementById('btn-confirm-delete');
 
-        // Azione: NO, Annulla
         btnCancel.onclick = () => {
             modal.style.display = 'none';
             fileToDelete = null;
             wrapperToRemove = null;
         };
 
-        // Azione: SÌ, Elimina
         btnConfirm.onclick = async () => {
             if (!fileToDelete) return;
             const token = document.querySelector('input[name="csrf_token"]').value;
+            
+            btnConfirm.disabled = true; // Previeni doppi click
+            btnConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-				const response = await fetch('/api/remove', {
+                const response = await fetch('/api/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({file_path: fileToDelete, csrf_token: token})
@@ -133,108 +154,125 @@
                     modal.style.display = 'none';
                     fileToDelete = null;
                     wrapperToRemove = null;
+                    
+                    // Se la galleria rimane vuota, ricarichiamo per mostrare il messaggio "vuoto"
+                    if(document.querySelectorAll('.post-wrapper').length === 0) {
+                        window.loadUserGallery();
+                    }
                 } else {
-                    console.error("Errore:", result.message);
+                    alert("Errore: " + result.message);
                 }
             } catch (error) {
-                console.error("Errore durante la richiesta di eliminazione:", error);
+                console.error("Errore eliminazione:", error);
+                alert("Errore di connessione.");
+            } finally {
+                btnConfirm.disabled = false;
+                btnConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> Elimina';
             }
         };
-    });
 
-    document.getElementById('editForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        // --- Logica Modifica Dati Utente ---
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageElement = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvataggio...';
 
-        const messageElement = document.getElementById('message');
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
 
-        try {
-            const response = await fetch('/api/edit/profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            const result = await response.json();
-            if (result.success) {
-                messageElement.style.color = 'green';
-                messageElement.textContent = result.message;
-            } else {
-                messageElement.style.color = 'red';
-                messageElement.textContent = result.message;
+            try {
+                const response = await fetch('/api/edit/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageElement.style.color = 'var(--success)';
+                    messageElement.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + result.message;
+                } else {
+                    messageElement.style.color = 'var(--danger)';
+                    messageElement.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + result.message;
+                }
+                
+                setTimeout(() => { messageElement.textContent = ''; }, 3000);
+            } catch (error) {
+                messageElement.style.color = 'var(--danger)';
+                messageElement.textContent = 'Errore di connessione al server.';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salva Modifiche';
             }
-            setTimeout(() => {
-                    messageElement.textContent = '';
-                }, 2000);
-        } catch (error) {
-            messageElement.style.color = 'red';
-            messageElement.textContent = 'Errore di connessione al server.';
-            console.error('Error:', error);
-        }
-    })
+        });
+    });
 </script>
 
 <style>
-	/* --- Contenitore Foto nel Profilo --- */
-	.post-wrapper {
-		position: relative; /* Fondamentale per posizionare il cestino */
-		display: inline-block;
-		width: 100%;
-	}
+    /* Griglia per le foto nel profilo */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
 
-	.trash-icon {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		background: rgba(220, 53, 69, 0.85); /* Rosso semi-trasparente */
-		color: white;
-		padding: 8px;
-		border-radius: 5px;
-		cursor: pointer;
-		font-size: 16px;
-		display: none; /* Nascosto di default */
-		transition: background 0.2s, transform 0.2s;
-	}
+    /* Contenitore Foto nel Profilo */
+    .post-wrapper {
+        position: relative;
+        width: 100%;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        cursor: pointer;
+    }
 
-	.trash-icon:hover {
-		background: rgba(220, 53, 69, 1);
-		transform: scale(1.1);
-	}
+    .post-wrapper img {
+        width: 100%;
+        aspect-ratio: 1/1; /* Miniature quadrate per il profilo */
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s;
+    }
 
-	/* Mostra il cestino solo quando passi il mouse sulla foto */
-	.post-wrapper:hover .trash-icon {
-		display: block;
-	}
+    .post-wrapper:hover {
+        border-color: var(--primary);
+    }
+    
+    .post-wrapper:hover img {
+        transform: scale(1.05);
+    }
 
-	/* --- Modale di Eliminazione --- */
-	.modal-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background: rgba(0, 0, 0, 0.6);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-	}
+    /* Il Cestino: Più elegante e visibile solo all'hover */
+    .trash-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 35px;
+        height: 35px;
+        background: rgba(255, 255, 255, 0.9); /* Sfondo bianco per staccare dalla foto */
+        color: var(--danger);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+    }
 
-	.modal-content {
-		background: white;
-		padding: 25px;
-		border-radius: 10px;
-		text-align: center;
-		max-width: 400px;
-		box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-	}
+    .post-wrapper:hover .trash-icon {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
-	.modal-buttons {
-		margin-top: 20px;
-		display: flex;
-		justify-content: center;
-		gap: 15px;
-	}
+    .trash-icon:hover {
+        background: var(--danger);
+        color: white;
+    }
 </style>

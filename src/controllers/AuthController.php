@@ -211,6 +211,9 @@ class AuthController extends Controller {
                     $_SESSION['user']['username'] = $cleanData['username'];
                 if (isset($cleanData['email']))
                     $_SESSION['user']['email'] = $cleanData['email'];
+                if (isset($cleanData['notify_comments'])) {
+                    $_SESSION['user']['notify_comments'] = $cleanData['notify_comments'];
+                }
                 echo json_encode(['success' => true, 'message' => 'Valori aggiornati con successo']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Errore durante l\'aggiornamento']);

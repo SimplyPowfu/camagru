@@ -1,0 +1,11 @@
+.post-wrapper { position: relative; display: inline-block; width: 100%; }
+
+.trash-icon {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(255, 82, 82, 0.9); color: white;
+    padding: 10px; border-radius: 8px; cursor: pointer;
+    font-size: 16px; display: none; transition: var(--transition);
+}
+
+.trash-icon:hover { background: var(--danger); transform: scale(1.1); }
+.post-wrapper:hover .trash-icon { display: block; }

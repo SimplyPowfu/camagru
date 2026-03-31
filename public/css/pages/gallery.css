@@ -1,0 +1,78 @@
+/* Griglia Home: si adatta allo spazio disponibile */
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Stile della card che avvolge la foto nella Home */
+.photo-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 10px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.photo-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    border-color: var(--primary);
+}
+
+.photo-card img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: calc(var(--radius) - 4px);
+    display: block;
+}
+
+/* Contenitore della galleria nella sidebar */
+#side-gallery {
+    display: flex;
+    flex-direction: column; /* Incolonnate 1 ad 1 */
+    gap: 10px;              /* Spazio tra una foto e l'altra */
+    max-height: 70vh;       /* Altezza massima per attivare lo scroll */
+    overflow-y: auto;
+    padding: 5px;           /* Evita che l'ombra venga tagliata */
+}
+
+/* Stile delle singole miniature */
+#side-gallery img {
+    width: 260px;           /* Dimensione fissa piccola */
+    height: 260px;          /* Forza il quadrato */
+    max-width: 100%;
+    margin: 0 auto;         /* Centra la miniatura nella sidebar */
+    object-fit: cover;      /* Taglia l'immagine senza deformarla */
+    border-radius: 8px;     /* Angoli arrotondati coerenti con la palette */
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+/* Effetto Hover Premium */
+#side-gallery img:hover {
+    transform: scale(1.05);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(78, 168, 222, 0.2);
+}
+
+/* Scrollbar sottile per non rovinare il design */
+#side-gallery::-webkit-scrollbar {
+    width: 4px;
+}
+#side-gallery::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+#comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+#comments-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}

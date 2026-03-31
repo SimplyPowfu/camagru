@@ -151,10 +151,11 @@ class Photo {
 	/**
      * Prende N picture dal db Images
      */
-    public static function getPictures($limit = 10) {
+    public static function getPictures($limit = 6, $offset = 0) {
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT * FROM images ORDER BY created_at DESC LIMIT :limit");
+        $stmt = $db->prepare("SELECT * FROM images ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
         $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
         $stmt->execute();
         //fetchAll restituisce un array di righe
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

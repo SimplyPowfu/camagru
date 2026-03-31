@@ -1,0 +1,5 @@
+.auth-container {
+    max-width: 400px; margin: 40px auto; padding: 30px;
+    background: var(--surface); border-radius: var(--radius);
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+}

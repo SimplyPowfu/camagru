@@ -1,0 +1,37 @@
+.preview-box {
+    position: relative;
+    border: 4px solid var(--border);
+    background: #000;
+}
+
+#video, #file-preview, #canvas {
+    width: 100%; height: 100%; object-fit: cover;
+}
+#video { transform: scaleX(-1); }
+
+#sticker-overlay {
+    pointer-events: none;
+}
+
+.dynamic-sticker {
+    pointer-events: all;
+    position: absolute;
+    cursor: grab;
+    z-index: 20;
+}
+
+.sticker-list {
+    display: flex; gap: 15px; margin: 15px 0; padding: 15px;
+    background: var(--background); border-radius: var(--radius);
+    overflow-x: auto; border: 1px solid var(--border);
+}
+
+.sticker-opt {
+    width: 80px; height: 80px; cursor: pointer; padding: 5px;
+    object-fit: contain; border-radius: 8px; border: 2px solid transparent;
+    transition: var(--transition);
+}
+.sticker-opt:hover { background: var(--border); }
+.sticker-opt.selected { border-color: var(--primary); background: var(--surface); }
+
+.controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }

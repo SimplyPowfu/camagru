@@ -1,0 +1,135 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--background);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Griglia Principale */
+.app-container {
+    display: grid;
+    grid-template-areas: 
+        "header header"
+        "main side"
+        "footer footer";
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Header Area */
+header {
+    grid-area: header;
+    background: var(--surface);
+    padding: 15px 25px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+/* Navigazione Header */
+header nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+header nav a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+header nav a:hover {
+    color: var(--primary);
+}
+
+/* Logo */
+.logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -1px;
+}
+
+.main-content { grid-area: main; min-width: 0; }
+footer { grid-area: footer; }
+
+/* Sidebar Globale (Desktop) */
+.sidebar {
+    grid-area: side;
+    background: var(--surface);
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar h3 {
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--background);
+    padding-bottom: 10px;
+}
+
+.sidebar-toggle-btn { display: none; }
+
+/* Responsive & Off-Canvas Sidebar (Mobile/Tablet) */
+@media (max-width: 992px) {
+    .app-container {
+        grid-template-areas: 
+            "header"
+            "main"
+            "footer";
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar-toggle-btn {
+        display: block;
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 1999;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius) 0 0 var(--radius);
+        padding: 15px 12px;
+        box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 320px;
+        height: 100vh;
+        z-index: 2000;
+        transition: right 0.3s ease;
+        border-radius: 0;
+    }
+
+    .sidebar.active { right: 0; }
+}

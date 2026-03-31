@@ -202,17 +202,20 @@
 		public function getPictures() {
 			if (ob_get_length()) ob_clean();
 			header('Content-Type: application/json');
-			$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
+			$limit = 6;
+			$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+			$offset = ($page - 1) * $limit;
 			if (empty($limit)) {
 				echo json_encode(['success' => false, 'message' => 'Dati mancanti']);
 				return;
 			}
 			try {
-				$photos = Photo::getPictures($limit);
+				$photos = Photo::getPictures($limit, $offset);
 				echo json_encode([
 					'success' => true,
 					'message' => 'Foto caricate!',
-					'data' => $photos
+					'data' => $photos,
+					'current_page' => $page
 				]);
 			} catch (Exception $e) {
 				http_response_code(500);
