@@ -7,14 +7,15 @@ class Photo {
     /**
      * Aggiunge la picture al db Images
      */
-    public static function addPicture($user_id, $file_path) {
+    public static function addPicture($user_id, $file_path, $filter_3d = null) {
         $db = Database::getInstance();
-        $stmt = $db->prepare("INSERT INTO images (user_id, file_path) 
-                VALUES (:user_id, :file_path)");
+        $stmt = $db->prepare("INSERT INTO images (user_id, file_path, filter_3d) 
+                VALUES (:user_id, :file_path, :filter_3d)");
         
         return $stmt->execute([
             'user_id'   => $user_id,
             'file_path' => $file_path,
+            'filter_3d' => $filter_3d
         ]);
     }
 

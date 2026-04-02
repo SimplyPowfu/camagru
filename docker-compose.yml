@@ -50,7 +50,7 @@ services:
     container_name: camagru-mailhog
     ports:
       - "1025:1025" # Porta SMTP (dove PHP invia le mail)
-      - "8025:8025" # Interfaccia Web (dove tu leggi le mail)
+      - "8025:8025"
 
 volumes:
   db_data:

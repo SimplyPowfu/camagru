@@ -20,6 +20,7 @@
 			$user = $_SESSION['user'] ?? null;
 			$imgBase64 = $data['image'] ?? '';
 			$stickersData = $data['stickers'] ?? [];
+			$filter3d = !empty($data['filter_3d']) ? $data['filter_3d'] : null;
 
 			if (!isset($data['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
 				http_response_code(403);
@@ -107,7 +108,7 @@
 				$saveSuccess = imagepng($baseImage, $filePath);
 				imagedestroy($baseImage);
 				if ($saveSuccess) {
-					if (Photo::addPicture($user['id'], $fileName)) {
+					if (Photo::addPicture($user['id'], $fileName, $filter3d)) {
 						echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $fileName]);
 					} else {
 						unlink($filePath);

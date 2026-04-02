@@ -46,8 +46,8 @@
     max-width: 100%;
     margin: 0 auto;         /* Centra la miniatura nella sidebar */
     object-fit: cover;      /* Taglia l'immagine senza deformarla */
-    border-radius: 8px;     /* Angoli arrotondati coerenti con la palette */
-    border: 2px solid var(--border);
+    border-radius: 10px;     /* Angoli arrotondati coerenti con la palette */
+    border: 4px solid var(--border);
     box-shadow: var(--shadow);
     transition: var(--transition);
     cursor: pointer;
@@ -56,8 +56,6 @@
 /* Effetto Hover Premium */
 #side-gallery img:hover {
     transform: scale(1.05);
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(78, 168, 222, 0.2);
 }
 
 /* Scrollbar sottile per non rovinare il design */

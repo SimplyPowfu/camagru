@@ -92,6 +92,7 @@
                 result.data.forEach(photo => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'post-wrapper';
+                    wrapper.style.position = 'relative';
 
                     const img = document.createElement('img');
                     img.src = '/uploads/' + photo.file_path;
@@ -112,6 +113,19 @@
 
                     wrapper.appendChild(img);
                     wrapper.appendChild(trash);
+                    if (photo.filter_3d && photo.filter_3d.trim() !== '') {
+                            const iconFileName = photo.filter_3d.replace('.glb', '.png');
+                            
+                            const icon3D = document.createElement('div');
+                            icon3D.className = 'icon-3d-badge';
+                            
+                            const iconImg = document.createElement('img');
+                            iconImg.src = `/filter/3Dicon/${iconFileName}`;
+                            iconImg.alt = "3D Interactive";
+                            
+                            icon3D.appendChild(iconImg);
+                            wrapper.appendChild(icon3D);
+                        }
                     profileGallery.appendChild(wrapper);
                 });
             }
@@ -123,7 +137,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         window.loadUserGallery();
 
-        // --- Logica Modale Eliminazione ---
         const modal = document.getElementById('delete-modal');
         const btnCancel = document.getElementById('btn-cancel-delete');
         const btnConfirm = document.getElementById('btn-confirm-delete');
@@ -274,5 +287,30 @@
     .trash-icon:hover {
         background: var(--danger);
         color: white;
+    }
+
+    .icon-3d-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 45px; /* Grandezza totale */
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        pointer-events: none;
+        transition: transform 0.3s ease;
+    }
+
+    .icon-3d-badge img {
+        width: 150%;
+        height: 150%;
+        object-fit: contain;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)); /* Dà un'ombra all'icona stessa per renderla visibile */
+    }
+
+    .post-wrapper:hover .icon-3d-badge {
+        transform: scale(1.15) rotate(5deg);
     }
 </style>

@@ -21,8 +21,7 @@
         const btnNext = document.getElementById('btn-next');
         const pageDisplay = document.getElementById('page-display');
 
-        async function loadGallery(page, exist=true) {
-            const homeGallery = document.getElementById('home-gallery'); 
+        async function loadGallery(page) {
             try {
                 const response = await fetch(`/api/gallery/picture?page=${page}`);
                 const result = await response.json();
@@ -41,6 +40,7 @@
                     result.data.forEach(photo => {
                         const card = document.createElement('div');
                         card.className = 'photo-card';
+                        card.style.position = 'relative';
 
                         const link = document.createElement('a');
                         link.href = `/post?post=${encodeURIComponent(photo.file_path)}`;
@@ -50,9 +50,22 @@
                         img.src = '/uploads/' + photo.file_path;
                         img.alt = "Post di Camagru";
                         img.loading = "lazy";
-
                         link.appendChild(img);
                         card.appendChild(link);
+
+                        if (photo.filter_3d && photo.filter_3d.trim() !== '') {
+                            const iconFileName = photo.filter_3d.replace('.glb', '.png');
+                            
+                            const icon3D = document.createElement('div');
+                            icon3D.className = 'icon-3d-badge';
+                            
+                            const iconImg = document.createElement('img');
+                            iconImg.src = `/filter/3Dicon/${iconFileName}`;
+                            iconImg.alt = "3D Interactive";
+                            
+                            icon3D.appendChild(iconImg);
+                            card.appendChild(icon3D);
+                        }
                         homeGallery.appendChild(card);
                     });
                     pageDisplay.textContent = `Pagina ${page}`;
@@ -78,3 +91,30 @@
         loadGallery(currentPage);
     })();
 </script>
+
+<style>
+    .icon-3d-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 45px; /* Grandezza totale */
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        pointer-events: none;
+        transition: transform 0.3s ease;
+    }
+
+    .icon-3d-badge img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)); /* Dà un'ombra all'icona stessa per renderla visibile */
+    }
+
+    .photo-card:hover .icon-3d-badge {
+        transform: scale(1.15) rotate(5deg);
+    }
+</style>
