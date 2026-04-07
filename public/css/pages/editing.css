@@ -1,37 +1,162 @@
+.main-edit-area {
+    width: 100%;
+}
+
 .preview-box {
     position: relative;
-    border: 4px solid var(--border);
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 4/3;
     background: #000;
+    margin: 0 auto 24px auto;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    overflow: hidden;
 }
 
-#video, #file-preview, #canvas {
-    width: 100%; height: 100%; object-fit: cover;
-}
-#video { transform: scaleX(-1); }
-
-#sticker-overlay {
-    pointer-events: none;
+.preview-layer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
 }
 
+.preview-video {
+    object-fit: cover;
+    transform: scaleX(-1);
+    z-index: 1;
+}
+
+.preview-img {
+    object-fit: contain;
+    z-index: 1;
+}
+
+.layer-webgl { z-index: 10; pointer-events: none; }
+.layer-overlay { z-index: 5; pointer-events: none; }
+
+.save-loader {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.save-loader-text {
+    margin-top: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* --- Contenitori Liste (Stickers e Modelli) --- */
+.filter3d-container, .sticker-selector {
+    background: var(--surface);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.filter3d-title {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.sticker-list, .filter3d-list {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    scrollbar-width: thin; /* Firefox */
+}
+
+/* Scrollbar personalizzata per le liste orizzontali */
+.sticker-list::-webkit-scrollbar,
+.filter3d-list::-webkit-scrollbar {
+    height: 6px;
+}
+.sticker-list::-webkit-scrollbar-thumb,
+.filter3d-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+/* --- Singole Opzioni --- */
+.sticker-opt, .model-opt {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0; /* Impedisce che si rimpiccioliscano */
+    cursor: pointer;
+    padding: 8px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: var(--background);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sticker-opt:hover, .model-opt:hover {
+    border-color: var(--border);
+    transform: translateY(-2px);
+}
+
+.sticker-opt.selected, .model-opt.selected {
+    border-color: var(--primary);
+    background: var(--surface);
+    box-shadow: 0 4px 12px var(--ring);
+}
+
+.none-opt {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* --- Sticker Dinamici (sopra la fotocamera) --- */
 .dynamic-sticker {
     pointer-events: all;
     position: absolute;
     cursor: grab;
     z-index: 20;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
 }
 
-.sticker-list {
-    display: flex; gap: 15px; margin: 15px 0; padding: 15px;
-    background: var(--background); border-radius: var(--radius);
-    overflow-x: auto; border: 1px solid var(--border);
+.dynamic-sticker:active {
+    cursor: grabbing;
 }
 
-.sticker-opt {
-    width: 80px; height: 80px; cursor: pointer; padding: 5px;
-    object-fit: contain; border-radius: 8px; border: 2px solid transparent;
-    transition: var(--transition);
+/* Controlli Finali */
+.controls {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
 }
-.sticker-opt:hover { background: var(--border); }
-.sticker-opt.selected { border-color: var(--primary); background: var(--surface); }
 
-.controls { margin-top: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 576px) {
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #live-controls, #review-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    #live-controls .btn, #review-controls .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}

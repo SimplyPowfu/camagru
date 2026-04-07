@@ -1,19 +1,29 @@
 :root {
-    /* Palette Light Premium */
+    /* Palette Principale */
     --primary: #4EA8DE;
     --secondary: #FF7F66;
-    --background: #F6F1EB;
+    
+    /* Superfici e Sfondi */
+    --background: #F8F9FA;
     --surface: #FFFFFF;
     
-    /* Testo e UI */
-    --text-main: #2D3436;
-    --text-muted: #636E72;
-    --success: #4CAF50;
-    --danger: #FF5252;
-    --border: #E5E0DA;
+    /* Testo */
+    --text-main: #212529;
+    --text-muted: #6C757D;
     
-    /* Utility */
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Stati (Feedback) */
+    --success: #20C997;
+    --danger: #FA5252;
+    
+    /* Bordi e Utilità */
+    --border: #DEE2E6;
+    --ring: rgba(78, 168, 222, 0.3); /* Per il focus degli input */
+    
+    /* Struttura */
     --radius: 12px;
-    --transition: all 0.3s ease;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.1);
+    
+    /* Animazioni */
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

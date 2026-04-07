@@ -1,4 +1,5 @@
 @import 'variables.css';
+@import 'reset.css';
 @import 'layout.css';
 @import 'components.css';
 
@@ -6,3 +7,5 @@
 @import 'pages/gallery.css';
 @import 'pages/profile.css';
 @import 'pages/auth.css';
+@import 'pages/post.css';
+@import 'pages/error.css';

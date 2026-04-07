@@ -1,38 +1,38 @@
-<div class="card" style="max-width: 400px; margin: 40px auto;">
-    <h2 style="color: var(--primary); font-weight: 800; text-align: center; margin-bottom: 20px;">
+<div class="card auth-container">
+    <h2 class="auth-header">
         <i class="fa-solid fa-right-to-bracket"></i> Accedi
     </h2>
 
     <form id="loginForm" autocomplete="off">
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; color: var(--text-main); font-weight: 600;">Username</label>
-            <input type="text" name="username" required autocomplete="off" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); outline: none;">
+        <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" required autocomplete="off">
         </div>
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; color: var(--text-main); font-weight: 600;">Password</label>
-            <input type="password" name="password" required autocomplete="new-password" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); outline: none;">
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" required autocomplete="new-password">
         </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
-            Login
-        </button>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
-    <p id="message" style="margin-top: 15px; font-weight: 600; text-align: center;"></p>
+    
+    <p id="message" class="form-message"></p>
 
-    <hr style="border: none; border-top: 1px solid var(--border); margin: 25px 0;">
+    <hr class="auth-divider">
 
-    <h4 style="color: var(--text-main); text-align: center; margin-bottom: 15px; font-weight: 600;">Password smarrita?</h4>
+    <h4 class="auth-footer-title">Password smarrita?</h4>
     <form id="resetForm" autocomplete="off">
-        <div style="margin-bottom: 15px;">
-            <input type="email" name="email" placeholder="La tua email..." required autocomplete="off" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); outline: none;">
+        <div class="form-group">
+            <input type="email" name="email" placeholder="La tua email..." required autocomplete="off">
         </div>
-        <button type="submit" class="btn btn-secondary" style="width: 100%; padding: 10px;">
+        <button type="submit" class="btn btn-secondary w-100">
             <i class="fa-solid fa-envelope"></i> Invia Link di Reset
         </button>
     </form>
-    <p id="reset-message" style="margin-top: 15px; font-weight: 600; text-align: center;"></p>
+    
+    <p id="reset-message" class="form-message"></p>
 
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="/register" style="color: var(--primary); text-decoration: none; font-weight: 600;">Non hai un account? Registrati</a>
+    <div class="auth-link-container">
+        <a href="/register" class="auth-link">Non hai un account? Registrati</a>
     </div>
 </div>
 
@@ -58,17 +58,17 @@
             const result = await response.json();
 
             if (result.success) {
-                messageElement.style.color = 'var(--success)';
+                messageElement.className = 'form-message text-success';
                 messageElement.innerHTML = '<i class="fa-solid fa-circle-check"></i> Login riuscito! Reindirizzamento...';
                 setTimeout(() => { window.location.href = '/'; }, 1000);
             } else {
-                messageElement.style.color = 'var(--danger)';
+                messageElement.className = 'form-message text-danger';
                 messageElement.textContent = result.message;
                 btn.disabled = false;
                 btn.innerHTML = 'Login';
             }
         } catch (error) {
-            messageElement.style.color = 'var(--danger)';
+            messageElement.className = 'form-message text-danger';
             messageElement.textContent = 'Errore di connessione al server.';
             btn.disabled = false;
             btn.innerHTML = 'Login';
@@ -95,14 +95,14 @@
             const result = await response.json();
 
             if (result.success) {
-                messageElem.style.color = 'var(--success)';
+                messageElem.className = 'form-message text-success';
                 messageElem.innerHTML = '<i class="fa-solid fa-circle-check"></i> Email inviata!';
             } else {
-                messageElem.style.color = 'var(--danger)';
+                messageElem.className = 'form-message text-danger';
                 messageElem.textContent = result.message;
             }
         } catch (error) {
-            messageElem.style.color = 'var(--danger)';
+            messageElem.className = 'form-message text-danger';
             messageElem.textContent = 'Errore di connessione al server.';
         } finally {
             btn.disabled = false;

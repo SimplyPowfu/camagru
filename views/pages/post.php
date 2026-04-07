@@ -4,39 +4,35 @@
     }
 ?>
 
-<div class="card" style="max-width: 800px; margin: 0 auto;">
+<div class="card post-container">
     
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
-        <div style="width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;">
-            <span id="user-initial"><i class="fa-solid fa-user"></i></span>
-        </div>
+    <div class="post-header">
+        <div class="avatar-lg" id="user-initial"><i class="fa-solid fa-user"></i></div>
         <div>
-            <h3 style="margin: 0; color: var(--text-main); font-weight: 700;">
-                <span id="username">Caricamento...</span>
-            </h3>
-            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Camagru Post</p>
+            <h3 class="post-author-name" id="username">Caricamento...</h3>
+            <p class="post-meta-text">Camagru Post</p>
         </div>
     </div>
 
-    <div id="post" style="position: relative; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: #f0f0f0; aspect-ratio: 4/3;">
-        <div id="webgl-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;"></div>
+    <div id="post" class="post-media-box">
+        <div id="webgl-container" class="preview-layer layer-webgl"></div>
     </div>
 
-    <div id="post-icon" style="display: flex; align-items: center; gap: 20px; padding: 15px 0 10px 0;"></div>
+    <div id="post-icon" class="post-actions"></div>
 
-    <div id="comments-section" style="display: none; border-top: 1px solid var(--border); padding-top: 20px;">
-        <div id="comments-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; display: flex; flex-direction: column; gap: 12px;">
-            <p style="color: var(--text-muted); text-align: center; font-style: italic;">Nessun commento presente. Sii il primo!</p>
+    <div id="comments-section" class="comments-section" style="display: none;">
+        <div id="comments-list" class="comments-list">
+            <p class="comment-empty">Nessun commento presente. Sii il primo!</p>
         </div>
-        <div class="comment-input-area" style="display: flex; gap: 10px; align-items: center; background: var(--background); padding: 10px; border-radius: var(--radius);">
+        
+        <div class="comment-input-area">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-            <input type="text" id="new-comment" placeholder="Scrivi un commento..." style="flex: 1; padding: 12px 15px; border-radius: 20px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02); background: var(--surface); margin: 0; outline: none;">
-            <button id="btn-send-comment" class="btn btn-primary" style="border-radius: 20px; padding: 10px 20px;">
+            <input type="text" id="new-comment" class="comment-input" placeholder="Scrivi un commento...">
+            <button id="btn-send-comment" class="btn btn-primary" style="border-radius: 20px;">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
     </div>
-
 </div>
 
 <script type="module">
@@ -44,6 +40,15 @@
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     document.addEventListener('DOMContentLoaded', () => {
+
+        // Funzione di Hashing per generare un colore univoco basato sull'username
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++)
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            const hue = Math.abs(hash % 360);
+            return `hsl(${hue}, 65%, 55%)`;
+        }
 
         function init3DModel(modelFilename) {
             const webglContainer = document.getElementById('webgl-container');
@@ -140,7 +145,7 @@
             const postName = urlParams.get('post');
 
             if (!postName) {
-                sideGallery.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--danger);">Post non trovato.</p>';
+                sideGallery.innerHTML = '<p class="form-message text-danger">Post non trovato.</p>';
                 return;
             }
 
@@ -152,24 +157,19 @@
                     
                     const img = document.createElement('img');
                     img.src = '/uploads/' + result.data.file_path;
-                    img.style.width = "100%";
-                    img.style.height = "100%";
-                    img.style.objectFit = "cover";
-                    img.style.position = "absolute";
-                    img.style.top = "0";
-                    img.style.left = "0";
-                    img.style.zIndex = "1";
+                    img.className = "preview-layer preview-img";
                     
                     sideGallery.appendChild(img);
                     
                     usernameDisplay.textContent = result.data.username;
                     if (result.data.username) {
-                        userInitial.textContent = result.data.username.charAt(0).toUpperCase();
+                        userInitial.innerHTML = result.data.username.charAt(0).toUpperCase();
+                        // Applica il colore calcolato all'avatar dell'autore del post
+                        userInitial.style.backgroundColor = stringToColor(result.data.username);
                     }
 
-                    if (result.data.filter_3d && result.data.filter_3d !== "") {
-                        init3DModel(result.data.filter_3d);
-                    }
+                    if (result.data.filter_3d && result.data.filter_3d !== "")
+                        init3DModel(result.data.filter_3d);// TODO, rendere la funzione export per usarla anche su editing
 
                     try {
                         const responseLike = await fetch(`/api/post/checkLike?image_id=${result.data.id}`);
@@ -179,64 +179,39 @@
                             postIcon.innerHTML = '';
                             
                             const likeContainer = document.createElement('div');
-                            likeContainer.style.display = 'flex';
-                            likeContainer.style.alignItems = 'center';
-                            likeContainer.style.gap = '8px';
-                            likeContainer.style.cursor = 'pointer';
+                            likeContainer.className = 'action-btn action-like';
                             
                             const like = document.createElement('i');
-                            like.style.fontSize = '24px';
-                            like.style.transition = 'transform 0.2s';
-                            like.className = resultLike.action === 'like' ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
-                            if (resultLike.action === 'like') like.style.color = 'var(--danger)';
+                            like.className = resultLike.action === 'like' ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart';
                             
                             const countSpan = document.createElement('span');
                             countSpan.textContent = resultLike.count ? Number(resultLike.count) : '0';
-                            countSpan.style.fontWeight = '700';
-                            countSpan.style.fontSize = '1.1rem';
 
-                            likeContainer.onmouseover = () => like.style.transform = 'scale(1.1)';
-                            likeContainer.onmouseout = () => like.style.transform = 'scale(1)';
                             likeContainer.onclick = () => toggleLike(result.data.id, like, countSpan);
                             
                             likeContainer.appendChild(like);
                             likeContainer.appendChild(countSpan);
 
                             const commentContainer = document.createElement('div');
-                            commentContainer.style.display = 'flex';
-                            commentContainer.style.alignItems = 'center';
-                            commentContainer.style.gap = '8px';
-                            commentContainer.style.cursor = 'pointer';
+                            commentContainer.className = 'action-btn action-comment';
 
                             const comment = document.createElement('i');
                             comment.className = 'fa-regular fa-comment';
-                            comment.style.fontSize = '24px';
-                            comment.style.transition = 'transform 0.2s';
-                            
-                            const commentText = document.createElement('span');
-                            commentText.textContent = "Commenta";
-                            commentText.style.fontWeight = '600';
-
-                            commentContainer.onmouseover = () => comment.style.transform = 'scale(1.1)';
-                            commentContainer.onmouseout = () => comment.style.transform = 'scale(1)';
 
                             commentContainer.onclick = () => {
                                 const section = document.getElementById('comments-section');
                                 section.style.display = (section.style.display === 'none') ? 'block' : 'none';
                                 
                                 if (section.style.display === 'block') {
-                                    comment.className = 'fa-solid fa-comment';
-                                    comment.style.color = 'var(--primary)';
+                                    comment.className = 'fa-solid fa-comment text-primary';
                                     document.getElementById('new-comment').focus();
                                     loadComment(result.data.id);
                                 } else {
                                     comment.className = 'fa-regular fa-comment';
-                                    comment.style.color = '';
                                 }
                             };
 
                             commentContainer.appendChild(comment);
-                            commentContainer.appendChild(commentText);
 
                             postIcon.appendChild(likeContainer);
                             postIcon.appendChild(commentContainer);
@@ -277,54 +252,35 @@
                     commentsList.innerHTML = '';
                     
                     if (result.data.length === 0) {
-                        commentsList.innerHTML = '<p style="color: var(--text-muted); text-align: center; font-style: italic;">Nessun commento. Rompi il ghiaccio!</p>';
+                        commentsList.innerHTML = '<p class="comment-empty">Nessun commento. Rompi il ghiaccio!</p>';
                         return;
                     }
                     
                     result.data.forEach(comment => {
                         const wrapper = document.createElement('div');
-                        wrapper.style.display = 'flex';
-                        wrapper.style.gap = '10px';
+                        wrapper.className = 'comment-wrapper';
                         
                         const avatar = document.createElement('div');
-                        avatar.style.width = '30px';
-                        avatar.style.height = '30px';
-                        avatar.style.borderRadius = '50%';
-                        avatar.style.background = 'var(--text-muted)';
-                        avatar.style.color = 'white';
-                        avatar.style.display = 'flex';
-                        avatar.style.alignItems = 'center';
-                        avatar.style.justifyContent = 'center';
-                        avatar.style.fontSize = '0.8rem';
-                        avatar.style.fontWeight = 'bold';
-                        avatar.style.flexShrink = '0'; 
+                        avatar.className = 'avatar-sm';
                         avatar.textContent = comment.username.charAt(0).toUpperCase();
+                        // Applica il colore calcolato all'avatar del commento
+                        avatar.style.backgroundColor = stringToColor(comment.username);
 
-                        const p = document.createElement('div');
-                        p.style.background = 'var(--background)';
-                        p.style.padding = '10px 15px';
-                        p.style.borderRadius = '0 15px 15px 15px'; 
-                        p.style.flex = '1';
-                        p.style.minWidth = '0'; 
+                        const bubble = document.createElement('div');
+                        bubble.className = 'comment-bubble';
 
                         const strongUser = document.createElement('strong');
+                        strongUser.className = 'comment-author';
                         strongUser.textContent = comment.username;
-                        strongUser.style.display = 'block';
-                        strongUser.style.fontSize = '0.9rem';
-                        strongUser.style.color = 'var(--primary)';
-                        strongUser.style.marginBottom = '3px';
                         
                         const textSpan = document.createElement('span');
+                        textSpan.className = 'comment-text';
                         textSpan.textContent = comment.content;
-                        textSpan.style.color = 'var(--text-main)';
-                        textSpan.style.wordBreak = 'break-word';
-                        textSpan.style.whiteSpace = 'pre-wrap';
-                        textSpan.style.display = 'block';
 
-                        p.appendChild(strongUser);
-                        p.appendChild(textSpan);
+                        bubble.appendChild(strongUser);
+                        bubble.appendChild(textSpan);
                         wrapper.appendChild(avatar);
-                        wrapper.appendChild(p);
+                        wrapper.appendChild(bubble);
                         commentsList.appendChild(wrapper);
                     });
                     commentsList.scrollTop = commentsList.scrollHeight;
@@ -345,8 +301,7 @@
                 const result = await response.json();
                 
                 if (result.success && result.action){
-                    like.className = result.action === 'liked' ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
-                    like.style.color = result.action === 'liked' ? 'var(--danger)' : '';
+                    like.className = result.action === 'liked' ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart';
                     
                     if(result.action === 'liked') {
                         like.style.transform = 'scale(1.3)';

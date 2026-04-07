@@ -28,29 +28,27 @@
 
 <div class="card">
     <div class="main-edit-area">
-        <h2 style="color: var(--primary); font-weight: 800; margin-bottom: 5px;">Editor Avanzato</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        <h2 class="page-title">Editor Avanzato</h2>
+        <p class="page-subtitle">
             <i class="fa-solid fa-circle-info"></i> Trascina per spostare o usa la rotellina per ridimensionare gli sticker.
         </p>
 
-        <div id="preview-container" class="preview-box" style="position: relative; width: 100%; max-width: 640px; aspect-ratio: 4/3; background: #000; margin: 0 auto 20px auto; overflow: hidden; border-radius: var(--radius); border: 2px solid var(--border);">
-            
-            <video id="video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); position: absolute; z-index: 1;"></video>
-            <img id="file-preview" src="#" alt="Anteprima" style="display: none; width: 100%; height: 100%; object-fit: contain; position: absolute; z-index: 1;">
-            <canvas id="canvas" width="640" height="480" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+        <div id="preview-container" class="preview-box">
+            <video id="video" autoplay playsinline class="preview-layer preview-video"></video>
+            <img id="file-preview" src="#" alt="Anteprima" style="display: none;" class="preview-layer preview-img">
+            <canvas id="canvas" width="640" height="480" style="display: none;" class="preview-layer"></canvas>
 
-            <div id="sticker-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none;"></div>
-            
-            <div id="webgl-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;"></div>
+            <div id="sticker-overlay" class="preview-layer layer-overlay"></div>
+            <div id="webgl-container" class="preview-layer layer-webgl"></div>
 
-            <div id="save-loader" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center;">
-                <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
-                <p style="margin-top: 15px; font-weight: 700; color: var(--text-main);">Salvataggio in corso...</p>
+            <div id="save-loader" style="display: none;" class="save-loader">
+                <i class="fa-solid fa-circle-notch fa-spin fa-3x text-primary"></i>
+                <p class="save-loader-text">Salvataggio in corso...</p>
             </div>
         </div>
 
         <div class="sticker-selector">
-            <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--text-main);">1. Scegli i tuoi sticker</h3>
+            <h3 class="filter3d-title">1. Scegli i tuoi sticker</h3>
             <div class="sticker-list">
                 <?php foreach ($stickers as $index => $src): ?>
                     <img src="<?= htmlspecialchars($src, ENT_QUOTES, 'UTF-8') ?>" class="sticker-opt" data-id="<?= $index ?>" title="Clicca per aggiungere">
@@ -58,22 +56,24 @@
             </div>
         </div>
 
-        <div class="filter3d-selector" style="background: var(--background); padding: 15px; border-radius: var(--radius); margin-bottom: 20px;">
-            <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-cube"></i> Modelli 3D</h3>
-            <div class="filter3d-list" style="display: flex; gap: 10px; overflow-x: auto;">
-                <div class="model-opt selected" data-filename="" style="padding: 10px 15px; background: var(--surface); border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; min-width: 80px;">
-                    Nessuno
-                </div>
-                <?php foreach ($models3D as $glb): ?>
-                    <div class="model-opt" data-filename="<?= htmlspecialchars($glb, ENT_QUOTES, 'UTF-8') ?>" style="padding: 10px 15px; background: var(--surface); border: 2px solid transparent; border-radius: 8px; cursor: pointer; text-align: center; white-space: nowrap;">
-                        <?= htmlspecialchars(pathinfo($glb, PATHINFO_FILENAME), ENT_QUOTES, 'UTF-8') ?>
-                    </div>
+        <div class="filter3d-container">
+            <h3 class="filter3d-title"><i class="fa-solid fa-cube"></i> Modelli 3D</h3>
+            <div class="filter3d-list">
+                <?php foreach ($models3D as $glb): 
+                    $iconName = str_replace('.glb', '.png', $glb);
+                    $iconPath = '/filter/3Dicon/' . $iconName;
+                ?>
+                    <img src="<?= htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8') ?>" 
+                         class="model-opt" 
+                         data-filename="<?= htmlspecialchars($glb, ENT_QUOTES, 'UTF-8') ?>" 
+                         title="<?= htmlspecialchars(pathinfo($glb, PATHINFO_FILENAME), ENT_QUOTES, 'UTF-8') ?>"
+                         alt="3D Filter">
                 <?php endforeach; ?>
             </div>
         </div>
 
         <div class="controls">
-            <div id="live-controls" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div id="live-controls" style="display: flex; gap: 12px; flex-wrap: wrap;">
                 <button id="btn-snap" class="btn btn-primary" disabled>
                     <i class="fa-solid fa-camera"></i> Scatta / Crea
                 </button>
@@ -86,7 +86,7 @@
                 </button>
             </div>
 
-            <div id="review-controls" style="display: none; gap: 10px;">
+            <div id="review-controls" style="display: none; gap: 12px;">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <button id="btn-save" class="btn btn-success">
                     <i class="fa-solid fa-check"></i> Conferma e Salva
@@ -96,7 +96,7 @@
                 </button>
             </div>
         </div>
-        <p id="message" style="margin-top: 15px; font-weight: 600;"></p>
+        <p id="message" class="form-message"></p>
     </div>
 </div>
 
@@ -130,7 +130,6 @@
         const clock = new THREE.Clock();
         
         function load3DModel(modelFilename) {
-            // Rimuovi il modello precedente
             if (currentObject) {
                 scene.remove(currentObject);
                 currentObject = null;
@@ -142,7 +141,6 @@
             loader.load(`/filter/3Dmodels/${modelFilename}`, (gltf) => {
                 currentObject = gltf.scene;
                 
-                // --- CUSTOM SCALE ---
                 if (modelFilename === 'blooming_hibiscus.glb')
                     currentObject.scale.set(3, 3, 3);
                 else if (modelFilename === 'person_arms.glb')
@@ -268,15 +266,18 @@
             }
 
             DOM.stickerOpts.forEach(opt => {
-                opt.style.borderColor = AppState.activeStickers.has(opt.dataset.id) ? 'var(--primary)' : 'transparent';
-            });
-
-            DOM.modelOpts.forEach(opt => {
-                if (opt.dataset.filename === (AppState.active3DModel || "")) {
-                    opt.style.borderColor = 'var(--primary)';
+                if(AppState.activeStickers.has(opt.dataset.id)) {
                     opt.classList.add('selected');
                 } else {
-                    opt.style.borderColor = 'transparent';
+                    opt.classList.remove('selected');
+                }
+            });
+
+            // Aggiornamento classi per i modelli 3D
+            DOM.modelOpts.forEach(opt => {
+                if (opt.dataset.filename === AppState.active3DModel) {
+                    opt.classList.add('selected');
+                } else {
                     opt.classList.remove('selected');
                 }
             });
@@ -336,10 +337,6 @@
                     img.src = data.src;
                     img.classList.add('dynamic-sticker');
                     img.dataset.id = id;
-                    img.style.position = 'absolute';
-                    img.style.pointerEvents = 'all'; 
-                    img.style.cursor = 'grab';
-                    img.style.zIndex = '5';
                     setupInteractions(img, id);
                     updateStickerDOM(img, data);
                     DOM.stickerOverlay.appendChild(img);
@@ -348,10 +345,16 @@
             });
         });
 
+        // Logica Toggle per i Modelli 3D
         DOM.modelOpts.forEach(opt => {
             opt.addEventListener('click', function() {
                 const filename = this.dataset.filename;
-                AppState.active3DModel = filename === "" ? null : filename;
+                // Se clicco quello già attivo, lo spengo. Altrimenti lo attivo.
+                if (AppState.active3DModel === filename) {
+                    AppState.active3DModel = null;
+                } else {
+                    AppState.active3DModel = filename;
+                }
                 window.dispatchEvent(new CustomEvent('3dModelChanged', { detail: AppState.active3DModel }));
                 renderUI();
             });
@@ -464,7 +467,7 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    DOM.message.style.color = 'var(--success)';
+                    DOM.message.className = 'form-message text-success';
                     DOM.message.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + result.message;
                     
                     AppState.phase = 'live';
@@ -477,11 +480,11 @@
                     renderUI();
                     if (typeof window.loadUserGallery === 'function') window.loadUserGallery();
                 } else {
-                    DOM.message.style.color = 'var(--danger)';
+                    DOM.message.className = 'form-message text-danger';
                     DOM.message.textContent = result.message;
                 }
             } catch (error) {
-                DOM.message.style.color = 'var(--danger)';
+                DOM.message.className = 'form-message text-danger';
                 DOM.message.textContent = 'Errore di connessione.';
             } finally {
                 DOM.saveLoader.style.display = 'none';

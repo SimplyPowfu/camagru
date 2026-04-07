@@ -1,5 +1,45 @@
 .auth-container {
-    max-width: 400px; margin: 40px auto; padding: 30px;
-    background: var(--surface); border-radius: var(--radius);
-    box-shadow: var(--shadow); border: 1px solid var(--border);
+    max-width: 400px;
+    margin: 40px auto;
+}
+
+.auth-header {
+    color: var(--primary);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+}
+
+.auth-footer-title {
+    color: var(--text-main);
+    text-align: center;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.auth-link-container {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.auth-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.auth-link:hover {
+    color: #3b8bb8;
+    text-decoration: underline;
+}
+
+.w-100 {
+    width: 100%;
 }

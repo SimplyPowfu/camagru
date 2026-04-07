@@ -13,6 +13,7 @@ down:
 
 clean:
 	docker compose down -v --rmi all --remove-orphans
+	rm -rf ./public/uploads/*
 
 re: clean all
 
