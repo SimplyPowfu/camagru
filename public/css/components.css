@@ -1,4 +1,3 @@
-/* Card System */
 .card {
     background: var(--surface);
     border-radius: var(--radius);
@@ -7,7 +6,6 @@
     box-shadow: var(--shadow);
 }
 
-/* Modali */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -35,7 +33,6 @@
     to { transform: scale(1); opacity: 1; }
 }
 
-/* Pulsanti */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -73,7 +70,6 @@
     box-shadow: none !important;
 }
 
-/* Form Elements */
 input[type="text"], 
 input[type="email"], 
 input[type="password"] {
@@ -93,7 +89,6 @@ input:focus {
     box-shadow: 0 0 0 4px var(--ring); 
 }
 
-/* Tipografia Condivisa */
 .page-title {
     color: var(--primary);
     font-weight: 800;
@@ -107,7 +102,6 @@ input:focus {
     margin-bottom: 20px;
 }
 
-/* Form Groups & Utilities */
 .form-group {
     margin-bottom: 16px;
 }
@@ -120,7 +114,6 @@ input:focus {
     font-size: 0.95rem;
 }
 
-/* Avatars */
 .avatar-lg {
     width: 45px;
     height: 45px;
@@ -149,7 +142,6 @@ input:focus {
     flex-shrink: 0;
 }
 
-/* Alerts & Messages */
 .form-message {
     margin-top: 15px;
     font-weight: 600;
@@ -162,7 +154,6 @@ input:focus {
 .text-danger { color: var(--danger) !important; }
 .text-primary { color: var(--primary) !important; }
 
-/* 3D Badge Globale */
 .icon-3d-badge {
     position: absolute;
     z-index: 5;
@@ -208,7 +199,7 @@ input:focus {
         padding: 24px 16px;
     }
     .btn {
-        width: 100%; /* I bottoni diventano full-width per facilitare il tap */
+        width: 100%;
         padding: 12px;
     }
 }

@@ -1,29 +1,22 @@
 :root {
-    /* Palette Principale */
     --primary: #4EA8DE;
     --secondary: #FF7F66;
     
-    /* Superfici e Sfondi */
     --background: #F8F9FA;
     --surface: #FFFFFF;
     
-    /* Testo */
     --text-main: #212529;
     --text-muted: #6C757D;
     
-    /* Stati (Feedback) */
     --success: #20C997;
     --danger: #FA5252;
     
-    /* Bordi e Utilità */
     --border: #DEE2E6;
-    --ring: rgba(78, 168, 222, 0.3); /* Per il focus degli input */
+    --ring: rgba(78, 168, 222, 0.3);
     
-    /* Struttura */
     --radius: 12px;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.1);
     
-    /* Animazioni */
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

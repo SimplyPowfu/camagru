@@ -76,7 +76,7 @@
     overflow-x: auto;
     padding-top: 4px;
     padding-bottom: 4px;
-    scrollbar-width: thin; /* Firefox */
+    scrollbar-width: thin;
 }
 
 /* Scrollbar personalizzata per le liste orizzontali */
@@ -90,11 +90,10 @@
     border-radius: 10px;
 }
 
-/* --- Singole Opzioni --- */
 .sticker-opt, .model-opt {
     width: 70px;
     height: 70px;
-    flex-shrink: 0; /* Impedisce che si rimpiccioliscano */
+    flex-shrink: 0;
     cursor: pointer;
     padding: 8px;
     object-fit: contain;
@@ -124,7 +123,6 @@
     color: var(--text-muted);
 }
 
-/* --- Sticker Dinamici (sopra la fotocamera) --- */
 .dynamic-sticker {
     pointer-events: all;
     position: absolute;

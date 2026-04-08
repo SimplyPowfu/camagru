@@ -6,7 +6,7 @@
 }
 
 .photo-card {
-    position: relative; /* BUG FIX: Ancora il badge 3D all'interno della card! */
+    position: relative;
     background: var(--surface);
     border-radius: var(--radius);
     padding: 12px;
@@ -94,14 +94,14 @@
     }
     
     .pagination-controls {
-        flex-direction: row; /* Tasti e testo affiancati */
+        flex-direction: row;
         justify-content: space-between;
         gap: 8px;
         margin-top: 24px;
     }
     
     .pagination-controls .btn {
-        width: auto; /* Annulla il width: 100% globale dei tasti mobile */
+        width: auto;
         padding: 8px 12px;
         font-size: 0.85rem;
     }

@@ -1,14 +1,13 @@
-/* Slider Orizzontale Profilo */
+
 .profile-grid {
     display: flex;
     overflow-x: auto;
     gap: 20px;
-    padding-bottom: 16px; /* Spazio per evitare che la scrollbar copra le foto */
+    padding-bottom: 16px;
     scrollbar-width: thin;
-    scroll-snap-type: x mandatory; /* Snap fluido durante lo scroll */
+    scroll-snap-type: x mandatory;
 }
 
-/* Scrollbar personalizzata per l'orizzontale */
 .profile-grid::-webkit-scrollbar {
     height: 8px;
 }
@@ -19,8 +18,8 @@
 
 .post-wrapper {
     position: relative;
-    flex: 0 0 220px; /* Larghezza fissa per forzare l'incolonnamento orizzontale */
-    scroll-snap-align: start; /* Allinea perfettamente le foto allo scroll */
+    flex: 0 0 220px;
+    scroll-snap-align: start;
     border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid var(--border);
@@ -45,7 +44,6 @@
     transform: scale(1.05);
 }
 
-/* Icona Cestino */
 .trash-icon {
     position: absolute;
     top: 12px;
@@ -76,7 +74,6 @@
     transform: scale(1.1) !important;
 }
 
-/* Sezioni e Moduli Profilo */
 .profile-section-title {
     color: var(--primary);
     font-weight: 800;
@@ -110,7 +107,6 @@
     accent-color: var(--primary);
 }
 
-/* Elementi Modale */
 .modal-buttons {
     display: flex;
     gap: 16px;
@@ -132,10 +128,9 @@
     margin-bottom: 24px;
 }
 
-/* Responsive Mobile Profilo */
 @media (max-width: 576px) {
     .post-wrapper {
-        flex: 0 0 150px; /* Rimpicciolisce le card su mobile per vederne di più */
+        flex: 0 0 150px;
     }
     .trash-icon {
         width: 30px;

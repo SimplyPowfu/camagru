@@ -62,7 +62,6 @@
 .action-btn:hover i { transform: scale(1.1); }
 .action-like i.fa-solid { color: var(--danger); }
 
-/* Sezione Commenti */
 .comments-section {
     border-top: 1px solid var(--border);
     padding-top: 20px;
