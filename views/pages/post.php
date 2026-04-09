@@ -136,6 +136,7 @@
         }
 
         async function loadPost() {
+            const postContainer = document.querySelector('.post-container');
             const sideGallery = document.getElementById('post');
             const usernameDisplay = document.getElementById('username');
             const userInitial = document.getElementById('user-initial');
@@ -145,16 +146,23 @@
             const postName = urlParams.get('post');
 
             if (!postName) {
-                sideGallery.innerHTML = '<p class="form-message text-danger">Post non trovato.</p>';
+                postContainer.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fa-solid fa-image-slash" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+                            <h2 style="color: var(--text-main); margin-bottom: 10px; font-weight: 800;">Oops!</h2>
+                            <p style="color: var(--danger); font-weight: 500; margin-bottom: 30px;">Nessuna foto trovata</p>
+                            <a href="/" class="btn btn-primary" style="text-decoration: none;">
+                                <i class="fa-solid fa-house"></i> Torna alla Home
+                            </a>
+                        </div>
+                    `;
                 return;
             }
 
             try {
                 const response = await fetch(`/api/post/picture?file_path=${encodeURIComponent(postName)}`);
                 const result = await response.json();
-                
                 if (result.success && result.data) {
-                    
                     const img = document.createElement('img');
                     img.src = '/uploads/' + result.data.file_path;
                     img.className = "preview-layer preview-img";
@@ -293,6 +301,17 @@
                     } catch (error) {
                         console.error("Errore nel caricamento delle icon:", error);
                     }
+                } else {
+                    postContainer.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fa-solid fa-image-slash" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+                            <h2 style="color: var(--text-main); margin-bottom: 10px; font-weight: 800;">Oops!</h2>
+                            <p style="color: var(--danger); font-weight: 500; margin-bottom: 30px;">${result.message}</p>
+                            <a href="/" class="btn btn-primary" style="text-decoration: none;">
+                                <i class="fa-solid fa-house"></i> Torna alla Home
+                            </a>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error("Errore nel caricamento del post:", error);
