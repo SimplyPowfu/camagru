@@ -38,7 +38,10 @@ class AuthController extends Controller {
                     'notify_comments' => $user['notify_comments']
                 ];
 
-                echo json_encode(['success' => true, 'message' => 'Login effettuato']);
+                $redirectUrl = $_SESSION['redirect_to'] ?? '/';
+                unset($_SESSION['redirect_to']);
+
+                echo json_encode(['success' => true, 'message' => 'Login effettuato', 'redirect' => $redirectUrl]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Credenziali errate']);
             }

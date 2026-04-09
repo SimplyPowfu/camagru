@@ -203,11 +203,13 @@
                                 section.style.display = (section.style.display === 'none') ? 'block' : 'none';
                                 
                                 if (section.style.display === 'block') {
-                                    comment.className = 'fa-solid fa-comment text-primary';
+                                    comment.className = 'fa-solid fa-comment';
+                                    comment.style.color ='#FF7F66';
                                     document.getElementById('new-comment').focus();
                                     loadComment(result.data.id);
                                 } else {
                                     comment.className = 'fa-regular fa-comment';
+                                    comment.style.color = '';
                                 }
                             };
 
@@ -215,6 +217,63 @@
 
                             postIcon.appendChild(likeContainer);
                             postIcon.appendChild(commentContainer);
+
+                            const shareContainer = document.createElement('div');
+                            shareContainer.className = 'action-btn action-share'; // Assicurati di stilizzare questa classe nel CSS
+                            shareContainer.style.display = 'flex';
+                            shareContainer.style.alignItems = 'center';
+                            shareContainer.style.gap = '8px';
+                            shareContainer.style.cursor = 'pointer';
+
+                            const shareIcon = document.createElement('i');
+                            shareIcon.className = 'fa-solid fa-share-nodes text-primary';
+                            shareIcon.style.fontSize = '24px';
+                            shareIcon.style.transition = 'transform 0.2s';
+
+                            const shareText = document.createElement('span');
+                            shareText.textContent = "Condividi";
+                            shareText.className = 'text-primary'
+                            shareText.style.fontWeight = '600';
+
+                            const shareMess = document.createElement('p');
+                            
+
+                            shareContainer.onmouseover = () => shareIcon.style.transform = 'scale(1.1)';
+                            shareContainer.onmouseout = () => shareIcon.style.transform = 'scale(1)';
+
+                            shareContainer.onclick = async () => {
+                                const postTitle = `Guarda la creazione di ${result.data.username} su Camagru!`;
+                                const postUrl = window.location.href;
+
+                                if (navigator.share) {
+                                    try {
+                                        await navigator.share({
+                                            title: 'Camagru Post',
+                                            text: postTitle,
+                                            url: postUrl
+                                        });
+                                        shareMess.textContent = 'Condivisione riuscita';
+                                        shareMess.style = 'color: green;'
+                                    } catch (err) {
+                                        shareMess.textContent = 'Condivisione annullata';
+                                        shareMess.style = 'color: red;'
+                                    }
+                                } else {
+                                    try {
+                                        await navigator.clipboard.writeText(postUrl);
+                                        shareMess.textContent = 'Link del post copiato sugli appunti!';
+                                        shareMess.style = 'color: green;'
+                                    } catch (e) {
+                                        shareMess.textContent = 'Copia negli appunti fallita: ' + e;
+                                        shareMess.style = 'color: red;'
+                                    }
+                                }
+                            };
+
+                            shareContainer.appendChild(shareIcon);
+                            shareContainer.appendChild(shareText);
+                            shareContainer.appendChild(shareMess);
+                            postIcon.appendChild(shareContainer);
 
                             const btnSend = document.getElementById('btn-send-comment');
                             const inputComment = document.getElementById('new-comment');

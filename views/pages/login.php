@@ -60,7 +60,7 @@
             if (result.success) {
                 messageElement.className = 'form-message text-success';
                 messageElement.innerHTML = '<i class="fa-solid fa-circle-check"></i> Login riuscito! Reindirizzamento...';
-                setTimeout(() => { window.location.href = '/'; }, 1000);
+                setTimeout(() => { window.location.href = result.redirect || '/'; }, 1000);
             } else {
                 messageElement.className = 'form-message text-danger';
                 messageElement.textContent = result.message;

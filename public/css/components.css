@@ -153,6 +153,7 @@ input:focus {
 .text-success { color: var(--success) !important; }
 .text-danger { color: var(--danger) !important; }
 .text-primary { color: var(--primary) !important; }
+.text-secondary { color: var(--secondary) !important; }
 
 .icon-3d-badge {
     position: absolute;

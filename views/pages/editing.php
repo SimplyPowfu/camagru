@@ -64,10 +64,10 @@
                     $iconPath = '/filter/3Dicon/' . $iconName;
                 ?>
                     <img src="<?= htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8') ?>" 
-                         class="model-opt" 
-                         data-filename="<?= htmlspecialchars($glb, ENT_QUOTES, 'UTF-8') ?>" 
-                         title="<?= htmlspecialchars(pathinfo($glb, PATHINFO_FILENAME), ENT_QUOTES, 'UTF-8') ?>"
-                         alt="3D Filter">
+                        class="model-opt" 
+                        data-filename="<?= htmlspecialchars($glb, ENT_QUOTES, 'UTF-8') ?>" 
+                        title="<?= htmlspecialchars(pathinfo($glb, PATHINFO_FILENAME), ENT_QUOTES, 'UTF-8') ?>"
+                        alt="3D Filter">
                 <?php endforeach; ?>
             </div>
         </div>
@@ -210,7 +210,9 @@
             activeStickers: new Map(),
             draggingSticker: null,
             dragOffset: { x: 0, y: 0 },
-            active3DModel: null 
+            active3DModel: null,
+            pinchInitialDistance: 0, // parametri per il touchscreen
+            pinchInitialWidth: 0
         };
 
         const DOM = {
@@ -308,6 +310,23 @@
                 else data.w = Math.max(data.w - 25, 30);
                 updateStickerDOM(imgElement, data);
             });
+
+            imgElement.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                AppState.draggingSticker = id;
+                const rect = imgElement.getBoundingClientRect();
+                
+                if (e.touches.length === 1) {
+                    AppState.dragOffset.x = e.touches[0].clientX - rect.left;
+                    AppState.dragOffset.y = e.touches[0].clientY - rect.top;
+                } else if (e.touches.length === 2) {
+                    AppState.pinchInitialDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    AppState.pinchInitialWidth = AppState.activeStickers.get(id).w;
+                }
+            }, { passive: false });
         }
 
         window.addEventListener('mousemove', (e) => {
@@ -323,6 +342,48 @@
         });
 
         window.addEventListener('mouseup', () => { AppState.draggingSticker = null; });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!AppState.draggingSticker) return;
+            if (e.cancelable) e.preventDefault(); 
+            
+            const containerRect = DOM.previewBox.getBoundingClientRect();
+            const el = document.querySelector(`.dynamic-sticker[data-id="${AppState.draggingSticker}"]`);
+            if (!el) return;
+            
+            const data = AppState.activeStickers.get(AppState.draggingSticker);
+            
+            if (e.touches.length === 1) {
+                const scaleX = 640 / containerRect.width;
+                const scaleY = 480 / containerRect.height;
+                data.x = (e.touches[0].clientX - containerRect.left - AppState.dragOffset.x) * scaleX;
+                data.y = (e.touches[0].clientY - containerRect.top - AppState.dragOffset.y) * scaleY;
+                updateStickerDOM(el, data);
+                
+            } else if (e.touches.length === 2 && AppState.pinchInitialDistance > 0) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const scale = currentDistance / AppState.pinchInitialDistance;
+                data.w = Math.max(30, Math.min(1000, AppState.pinchInitialWidth * scale));
+                updateStickerDOM(el, data);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) {
+                AppState.draggingSticker = null;
+            } else if (e.touches.length === 1 && AppState.draggingSticker) {
+                const el = document.querySelector(`.dynamic-sticker[data-id="${AppState.draggingSticker}"]`);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    AppState.dragOffset.x = e.touches[0].clientX - rect.left;
+                    AppState.dragOffset.y = e.touches[0].clientY - rect.top;
+                }
+            }
+        });
 
         DOM.stickerOpts.forEach(opt => {
             opt.addEventListener('click', function() {
@@ -362,7 +423,9 @@
 
         async function initWebcam() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' } 
+                });
                 DOM.video.srcObject = stream;
                 AppState.hasWebcamAccess = true;
                 AppState.source = 'webcam';
@@ -406,9 +469,22 @@
             DOM.ctx.clearRect(0, 0, 640, 480);
             
             if (AppState.source === 'webcam') {
+                const videoW = DOM.video.videoWidth;
+                const videoH = DOM.video.videoHeight;
+                const targetW = 640;
+                const targetH = 480;
+
+                const scale = Math.max(targetW / videoW, targetH / videoH);
+                const drawW = videoW * scale;
+                const drawH = videoH * scale;
+
+                const offsetX = (targetW - drawW) / 2;
+                const offsetY = (targetH - drawH) / 2;
+
                 DOM.ctx.save();
+                DOM.ctx.translate(targetW, 0);
                 DOM.ctx.scale(-1, 1);
-                DOM.ctx.drawImage(DOM.video, -640, 0, 640, 480);
+                DOM.ctx.drawImage(DOM.video, offsetX, offsetY, drawW, drawH);
                 DOM.ctx.restore();
             } else {
                 DOM.ctx.drawImage(DOM.filePreview, 0, 0, 640, 480);
@@ -441,8 +517,21 @@
             const bCtx = baseCanvas.getContext('2d');
             
             if (AppState.source === 'webcam') {
-                bCtx.save(); bCtx.scale(-1, 1);
-                bCtx.drawImage(DOM.video, -640, 0, 640, 480);
+                const videoW = DOM.video.videoWidth;
+                const videoH = DOM.video.videoHeight;
+                const targetW = 640;
+                const targetH = 480;
+                
+                const scale = Math.max(targetW / videoW, targetH / videoH);
+                const drawW = videoW * scale;
+                const drawH = videoH * scale;
+                const offsetX = (targetW - drawW) / 2;
+                const offsetY = (targetH - drawH) / 2;
+
+                bCtx.save(); 
+                bCtx.translate(targetW, 0);
+                bCtx.scale(-1, 1);
+                bCtx.drawImage(DOM.video, offsetX, offsetY, drawW, drawH);
                 bCtx.restore();
             } else {
                 bCtx.drawImage(DOM.filePreview, 0, 0, 640, 480);
