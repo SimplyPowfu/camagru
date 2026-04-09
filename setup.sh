@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+# Da i permessi alla cartella o la crea
+echo "Configuring directories and permissions..."
+mkdir -p /var/www/html/public/uploads
+chmod -R 777 /var/www/html/public/uploads
+
 # Attende che il database sia raggiungibile sulla porta 3306
 echo "Waiting for database to be ready..."
 until nc -z -v -w30 $DB_HOST 3306; do
