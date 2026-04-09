@@ -38,7 +38,7 @@ function sendEmail($email, $subject, $message) {
         $mail->addAddress($email);
 
         // Contenuto della mail
-        $mail->isHTML(false); // Il tuo template usa testo semplice
+        $mail->isHTML(false);
         $mail->Subject = $subject;
         $mail->Body    = $message;
 
@@ -46,7 +46,6 @@ function sendEmail($email, $subject, $message) {
         return true;
         
     } catch (Exception $e) {
-        // In produzione logghiamo l'errore senza mostrarlo all'utente
         error_log("Errore invio mail: {$mail->ErrorInfo}");
         return false;
     }

@@ -32,3 +32,9 @@ services:
       - "backend:80"
     depends_on:
       - backend
+
+  adminer:
+      image: adminer
+      container_name: camagru-adminer
+      ports:
+        - "8081:8080"

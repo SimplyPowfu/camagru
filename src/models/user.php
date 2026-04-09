@@ -40,7 +40,7 @@ class User {
     public static function create($username, $email, $password, $token) {
         $db = Database::getInstance();
         $sql = "INSERT INTO users (username, email, password, activation_token, is_active) 
-                VALUES (:username, :email, :password, :token, 0)";
+                VALUES (:username, :email, :password, :token, 1)";
         $stmt = $db->prepare($sql);
         return $stmt->execute([
             'username' => $username,
