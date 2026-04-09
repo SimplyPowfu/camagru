@@ -2,6 +2,11 @@
 
 	require_once __DIR__ . '/../controller.php';
 	require_once __DIR__ . '/../models/photo.php';
+	require_once __DIR__ . '/../../vendor/autoload.php';
+
+	use Cloudinary\Configuration\Configuration;
+	use Cloudinary\Api\Upload\UploadApi;
+	use Cloudinary\Api\Admin\AdminApi;
 
 	class PhotoController extends Controller {
 		public function editing() {
@@ -54,12 +59,10 @@
 				return;
 			}
 
-			$folder = __DIR__ . '/../../public/uploads/';
+			$folder = sys_get_temp_dir() . '/';
 			$filterDir = __DIR__ . '/../../public/filter/';
 			$fileName = 'camagru_' . bin2hex(random_bytes(8)) . '.png';
 			$filePath = $folder . $fileName;
-
-			if (!is_dir($folder)) mkdir($folder, 0777, true);
 
 			try {
 				$baseImage = imagecreatefromstring($fileData);
@@ -108,6 +111,21 @@
 				$saveSuccess = imagepng($baseImage, $filePath);
 				imagedestroy($baseImage);
 				if ($saveSuccess) {
+					Configuration::instance([
+						'cloud' => [
+							'cloud_name' => getenv('CLOUDINARY_CLOUD_NAME'), 
+							'api_key'    => getenv('CLOUDINARY_API_KEY'), 
+							'api_secret' => getenv('CLOUDINARY_API_SECRET')
+						],
+						'url' => ['secure' => true]
+					]);
+					$uploadApi = new UploadApi();
+                    $response = $uploadApi->upload($filePath, [
+                        'folder' => 'camagru_posts',
+                        'public_id' => pathinfo($fileName, PATHINFO_FILENAME)
+                    ]);
+                    $imageUrl = $response['secure_url'];
+                    unlink($filePath);
 					if (Photo::addPicture($user['id'], $fileName, $filter3d)) {
 						echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $fileName]);
 					} else {
@@ -118,6 +136,7 @@
 					echo json_encode(['success' => false, 'message' => 'Errore nella creazione del file finale']);
 				}
 			} catch (Exception $e) {
+				if (file_exists($filePath)) unlink($filePath);
 				http_response_code(500);
 				echo json_encode(['success' => false, 'message' => 'Errore interno del server durante il processamento dell\'immagine']);
 			}
@@ -141,9 +160,23 @@
 			}
 			try {
 				if (Photo::removePicture($user['id'], $file_path)){
-					$folder = __DIR__ . '/../../public/uploads/';
-					$filePath = $folder . $file_path;	
-					unlink($filePath);
+					$parts = explode('/camagru_posts/', $file_path);
+                    if (count($parts) > 1) {
+                        $filename = explode('.', $parts[1])[0];
+                        $publicId = 'camagru_posts/' . $filename;
+                        
+                        Configuration::instance([
+							'cloud' => [
+								'cloud_name' => getenv('CLOUDINARY_CLOUD_NAME'), 
+								'api_key'    => getenv('CLOUDINARY_API_KEY'), 
+								'api_secret' => getenv('CLOUDINARY_API_SECRET')
+							],
+							'url' => ['secure' => true]
+						]);
+                        
+                        $uploadApi = new UploadApi();
+                        $uploadApi->destroy($publicId);
+                    }
 					echo json_encode(['success' => true, 'message' => 'Post Eliminato!']);
 				}
 				else

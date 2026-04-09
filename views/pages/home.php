@@ -45,7 +45,7 @@
                         link.href = `/post?post=${encodeURIComponent(photo.file_path)}`;
 
                         const img = document.createElement('img');
-                        img.src = '/uploads/' + photo.file_path;
+                        img.src = photo.file_path;
                         img.alt = "Post di Camagru";
                         img.loading = "lazy";
                         

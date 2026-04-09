@@ -2,3 +2,5 @@
 Makefile
 public/uploads/*
 camagru_1774016633.png
+vendor/
+public/uploads/

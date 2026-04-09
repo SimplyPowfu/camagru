@@ -1,57 +1,24 @@
-version: '3.8'
-
 services:
-  nginx:
-    image: nginx:stable-alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
-
   backend:
     build: 
       context: .
       dockerfile: Dockerfile
+    ports:
+      # Mappiamo la porta 80 di Apache sulla tua 8080 locale
+      - "8080:80"
     volumes:
+      # Montiamo il codice in tempo reale per lo sviluppo
       - .:/var/www/html
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "--password=${MYSQL_PASSWORD}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - db_data:/var/lib/mysql
-  
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "8081:8080"
 
   mailhog:
     image: mailhog/mailhog
     container_name: camagru-mailhog
     ports:
-      - "1025:1025" # Porta SMTP (dove PHP invia le mail)
-      - "8025:8025"
-  
+      - "1025:1025" # Porta SMTP
+      - "8025:8025" # Interfaccia Web
+
   ngrok:
     image: ngrok/ngrok:latest
     ports:
@@ -61,9 +28,7 @@ services:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     command:
       - "http"
-      - "nginx:80"
+      # Ora Ngrok punta direttamente al backend sulla porta 80
+      - "backend:80"
     depends_on:
-      - nginx
-
-volumes:
-  db_data:
+      - backend

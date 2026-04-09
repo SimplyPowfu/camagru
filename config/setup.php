@@ -1,18 +1,23 @@
 <?php
 
-$envPath = __DIR__ . '/../.env';
-if (!file_exists($envPath)) {
-    die("❌ Errore: File .env non trovato\n");
+$host = getenv('DB_HOST');
+$name = getenv('DB_NAME');
+$user = getenv('DB_USER');
+$pass = getenv('DB_PASS');
+$port = getenv('DB_PORT');
+
+if (!$host && file_exists(__DIR__ . '/../.env')) {
+    $env = parse_ini_file(__DIR__ . '/../.env', false, INI_SCANNER_RAW);
+    $host = $env['DB_HOST'] ?? 'db';
+    $name = $env['DB_NAME'] ?? 'camagru';
+    $user = $env['DB_USER'] ?? 'user';
+    $pass = $env['DB_PASS'] ?? 'pass';
+    $port = $env['DB_PORT'] ?? '3306';
 }
 
-$env = parse_ini_file($envPath, false, INI_SCANNER_RAW);
-$host = $env['DB_HOST'] ?? 'db';
-$name = $env['DB_NAME'] ?? 'camagru';
-$user = $env['DB_USER'] ?? 'user';
-$pass = $env['DB_PASS'] ?? 'pass';
-
 try {
-    $dsn = "mysql:host=$host;charset=utf8mb4";
+    // Ricordati di aggiungere la porta anche qui
+    $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

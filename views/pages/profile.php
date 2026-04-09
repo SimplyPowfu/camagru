@@ -93,7 +93,7 @@
                     wrapper.className = 'post-wrapper';
 
                     const img = document.createElement('img');
-                    img.src = '/uploads/' + photo.file_path;
+                    img.src = photo.file_path;
                     img.alt = "Mio Post";
                     img.loading = "lazy";
                     img.onclick = () => window.location.href = `/post?post=${encodeURIComponent(photo.file_path)}`;

@@ -164,7 +164,7 @@
                 const result = await response.json();
                 if (result.success && result.data) {
                     const img = document.createElement('img');
-                    img.src = '/uploads/' + result.data.file_path;
+                    img.src = result.data.file_path;
                     img.className = "preview-layer preview-img";
                     
                     sideGallery.appendChild(img);
