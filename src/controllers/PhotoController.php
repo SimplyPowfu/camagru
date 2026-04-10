@@ -111,30 +111,30 @@
 				$saveSuccess = imagepng($baseImage, $filePath);
 				imagedestroy($baseImage);
 				if ($saveSuccess) {
-					Configuration::instance([
-						'cloud' => [
-							'cloud_name' => getenv('CLOUDINARY_CLOUD_NAME'), 
-							'api_key'    => getenv('CLOUDINARY_API_KEY'), 
-							'api_secret' => getenv('CLOUDINARY_API_SECRET')
-						],
-						'url' => ['secure' => true]
-					]);
-					$uploadApi = new UploadApi();
+                    Configuration::instance([
+                        'cloud' => [
+                            'cloud_name' => getenv('CLOUDINARY_CLOUD_NAME'), 
+                            'api_key'    => getenv('CLOUDINARY_API_KEY'), 
+                            'api_secret' => getenv('CLOUDINARY_API_SECRET')
+                        ],
+                        'url' => ['secure' => true]
+                    ]);
+                    $uploadApi = new UploadApi();
                     $response = $uploadApi->upload($filePath, [
                         'folder' => 'camagru_posts',
                         'public_id' => pathinfo($fileName, PATHINFO_FILENAME)
                     ]);
+                    
                     $imageUrl = $response['secure_url'];
                     unlink($filePath);
-					if (Photo::addPicture($user['id'], $fileName, $filter3d)) {
-						echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $fileName]);
-					} else {
-						unlink($filePath);
-						echo json_encode(['success' => false, 'message' => 'Errore nel salvataggio sul database']);
-					}
-				} else {
-					echo json_encode(['success' => false, 'message' => 'Errore nella creazione del file finale']);
-				}
+                    if (Photo::addPicture($user['id'], $imageUrl, $filter3d)) {
+                        echo json_encode(['success' => true, 'message' => 'Post Salvato!', 'file' => $imageUrl]);
+                    } else {
+                        echo json_encode(['success' => false, 'message' => 'Errore nel salvataggio sul database']);
+                    }
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Errore nella creazione del file finale']);
+                }
 			} catch (Exception $e) {
 				if (file_exists($filePath)) unlink($filePath);
 				http_response_code(500);
