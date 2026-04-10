@@ -1,20 +1,30 @@
-# 📸 Camagru
+# 📸 Camagru (Cloud Edition)
 
-Camagru è un'applicazione web full-stack sviluppata in puro PHP (PDO) e Javascript (Vanilla), progettata come clone essenziale di Instagram. Permette agli utenti di registrarsi, scattare foto tramite webcam o caricare immagini, applicare sticker 2D e modelli 3D interattivi, e interagire tramite like e commenti.
+Camagru è un'applicazione web full-stack sviluppata in **PHP 8.2 (Vanilla)** e **Javascript**, progettata come clone moderno di Instagram. Questa versione è ottimizzata per il deploy in ambienti Cloud professionali, utilizzando un'architettura a microservizi scalabile.
 
-Questo progetto è stato realizzato seguendo rigidi vincoli strutturali (niente framework backend/frontend pesanti) con un focus su architettura MVC personalizzata, sicurezza (PDO, CSRF, Hashing) e un'infrastruttura Dockerizzata "Robust & Proper".
+Il progetto segue rigidi vincoli strutturali con un focus su architettura **MVC personalizzata**, sicurezza (PDO, CSRF, Hashing) e un'infrastruttura **Dockerizzata**.
+
+---
+
+## 🚀 Architettura Cloud
+
+Per garantire robustezza e persistenza, l'app è stata migrata da un ambiente locale a un'infrastruttura distribuita:
+* **Compute:** [Render](https://render.com/) (Docker Runtime).
+* **Database:** [Aiven](https://aiven.io/) (Managed MySQL 8.0).
+* **Storage:** [Cloudinary](https://cloudinary.com/) (CDN per la gestione e persistenza delle immagini).
+* **Email:** [Brevo](https://www.brevo.com/) (SMTP relay) / Cloud MailHog per i test.
 
 ---
 
 ## ✨ Funzionalità Principali
 
-* **Auth System Sicuro:** Registrazione con validazione email, Login, Reset della password via email e "Deep Linking" (se clicchi un link protetto, dopo il login verrai reindirizzato esattamente dove volevi andare).
-* **Editor Avanzato:** * Supporto per Webcam (frontale su mobile) e file upload.
-  * Drag & Drop e Pinch-to-Zoom (supporto touch completo) per gli sticker 2D.
-  * Rendering di modelli 3D animati (`.glb`) sovrapposti alla scena tramite **Three.js**.
-* **Interazioni Social:** Like, commenti e notifiche via email quando qualcuno commenta i tuoi post.
-* **Condivisione Nativa:** Integrazione della Web Share API e Meta Tag Open Graph. Grazie al tunnel Ngrok integrato, i post possono essere condivisi su Instagram/WhatsApp mostrando le anteprime reali.
-* **Gestione Automatica:** Setup automatico del database e dei permessi delle cartelle all'avvio dei container.
+* **Auth System:** Registrazione, Login e Reset password. Bypass della verifica email integrato per scopi dimostrativi.
+* **Editor & Compositing:** * Supporto Webcam e file upload.
+  * Applicazione di sticker 2D tramite librerie GD di PHP.
+  * Rendering di modelli 3D animati (`.glb`) tramite **Three.js**.
+* **Social & Interaction:** Sistema di Like e Commenti in tempo reale (JSON API).
+* **Storage Persistente:** Integrazione con l'SDK di Cloudinary per garantire che le foto non vengano perse al riavvio dei container.
+* **Responsive UI:** Design mobile-first con CSS variabili e supporto touch (pinch-to-zoom sugli sticker).
 
 ---
 
@@ -22,51 +32,55 @@ Questo progetto è stato realizzato seguendo rigidi vincoli strutturali (niente 
 
 ```text
 .
-├── config/                 # File di configurazione e connessione PDO
-│   ├── database.php
-│   └── setup.php           # Script per la creazione automatica di tabelle
-├── public/                 # Risorse accessibili dal browser (Webroot Nginx)
-│   ├── css/                # Fogli di stile modulari e variabili CSS
-│   ├── filter/             # Sticker 2D (.png) e modelli 3D (.glb)
-│   ├── uploads/            # Cartella immagini generate dagli utenti
-│   └── index.php           # Entry point dell'applicazione
-├── src/                    # Logica Core (Backend MVC)
-│   ├── controllers/        # Gestione logica delle rotte (Auth, Home, Photo)
-│   ├── models/             # Interazioni col Database (User, Photo)
-│   ├── utils/              # Helper (connessione DB, invio Email)
-│   ├── AuthMiddleware.php  # Protezione delle rotte private
-│   ├── controller.php      # Classe base dei controller e rendering viste
-│   └── router.php          # Sistema di routing personalizzato
-├── views/                  # UI e Frontend
-│   ├── pages/              # Le singole schermate (Home, Post, Editing...)
-│   └── partials/           # Componenti riutilizzabili (Header, Footer, Sidebar)
-├── docker-compose.yml      # Orchestrazione dei container
-├── Dockerfile              # Configurazione dell'immagine Backend (PHP-FPM)
-├── Makefile                # Comandi rapidi per build e avvio
-├── nginx.conf              # Configurazione del server web
-└── setup.sh                # Entrypoint Docker: permessi e attesa DB
+├── config/             # Configurazione PDO e Database
+├── public/             # Webroot (Asset statici, sticker, filtri)
+│   └── index.php       # Entry point
+├── src/                # Logica Backend (MVC)
+│   ├── controllers/    # Controller (Cloudinary Integration)
+│   ├── models/         # Modelli (Interazione Aiven MySQL)
+│   ├── utils/          # Helper (Email SMTP, DB Connection)
+│   └── router.php      # Router personalizzato (supporto Health Check)
+├── views/              # Frontend (PHP Templates)
+├── docker-compose.yml  # Orchestrazione per sviluppo locale
+├── Dockerfile          # Configurazione per il deploy su Render
+└── Makefile            # Shortcut per lo sviluppo locale
 ```
 
-## Credenziali Database
+## 🛠️ Configurazione Environment (.env)
 ```
-MYSQL_ROOT_PASSWORD=root_password
-MYSQL_DATABASE=camagru
-MYSQL_USER=camagru_user
-MYSQL_PASSWORD=camagru_password
+Database (Aiven)
+    DB_HOST=
+    DB_PORT=
+    DB_NAME=
+    DB_USER=
+    DB_PASS=
 
-# Host del DB (nome del servizio in docker-compose)
-DB_HOST=nome_del_servizio_docker-compose
-DB_NAME=nome_del_db
-DB_USER=user_del_db
-DB_PASS=pass_del_db
+Storage (Cloudinary)
+    CLOUDINARY_CLOUD_NAME=
+    CLOUDINARY_API_KEY=
+    CLOUDINARY_API_SECRET=
 
-## Token di Ngrok (necessario per l'HTTPS e la condivisione social)
-NGROK_AUTHTOKEN=inserisci_qui_il_tuo_token
+Email (MailHog / Brevo)
+    SMTP_HOST=
+    SMTP_PORT=
+    SMTP_FROM=
 ```
 
-## Run del progetto
-Apri il terminale nella root del progetto e lancia:
+## 🌍 Deploy su Render
+L'app viene distribuita come Web Service Docker.
+
+  - Il Dockerfile imposta automaticamente la DocumentRoot su /public.
+
+  - Le dipendenze vengono installate durante la build tramite composer install --no-dev.
+
+  - È necessario impostare la variabile PORT=80 su Render per il corretto instradamento del traffico.
+
+## 💻 Sviluppo Locale
+Installa le dipendenze Composer:
 ```
-make
+docker compose run --rm backend composer install
 ```
-Il file setup.sh si occuperà automaticamente di assegnare i permessi chmod 777 alla cartella public/uploads e di aspettare che MySQL sia pronto prima di eseguire config/setup.php per creare il database.
+Avvia l'ambiente
+```
+make up
+```
