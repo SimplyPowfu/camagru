@@ -4,10 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      # Mappiamo la porta 80 di Apache sulla tua 8080 locale
       - "8080:80"
     volumes:
-      # Montiamo il codice in tempo reale per lo sviluppo
       - .:/var/www/html
     env_file:
       - .env
@@ -18,20 +16,6 @@ services:
     ports:
       - "1025:1025" # Porta SMTP
       - "8025:8025" # Interfaccia Web
-
-  ngrok:
-    image: ngrok/ngrok:latest
-    ports:
-      - "4040:4040"
-    restart: always
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-    command:
-      - "http"
-      # Ora Ngrok punta direttamente al backend sulla porta 80
-      - "backend:80"
-    depends_on:
-      - backend
 
   adminer:
       image: adminer
