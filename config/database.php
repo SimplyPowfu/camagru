@@ -3,23 +3,12 @@
 function getDatabaseConnection() {
     $host = $port = $dbname = $user = $pass = null;
     $envPath = __DIR__ . '/../.env';
-
-    if (file_exists($envPath)) {
-        $env = parse_ini_file($envPath);
-        if ($env !== false) {
-            $host = $env['DB_HOST'] ?? null;
-            $port = $env['DB_PORT'] ?? null;
-            $dbname = $env['DB_NAME'] ?? null;
-            $user = $env['DB_USER'] ?? null;
-            $pass = $env['DB_PASS'] ?? null;
-        }
-    } else {
-        $host = getenv('DB_HOST');
-        $port = getenv('DB_PORT');
-        $dbname = getenv('DB_NAME');
-        $user = getenv('DB_USER');
-        $pass = getenv('DB_PASS');
-    }
+    $env = parse_ini_file($envPath);
+    $host = getenv('DB_HOST');
+    $port = getenv('DB_PORT');
+    $dbname = getenv('DB_NAME');
+    $user = getenv('DB_USER');
+    $pass = getenv('DB_PASS');
 
     if (!$host || !$port || !$dbname || !$user || !$pass) {
         header('Content-Type: application/json');
