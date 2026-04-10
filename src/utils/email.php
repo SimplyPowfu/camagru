@@ -33,8 +33,12 @@ function sendEmail($email, $subject, $message) {
             $mail->SMTPAutoTLS = false;
         }
 
-        // Mittente e Destinatario
-        $mail->setFrom('no-reply@camagru.it', 'Camagru App');
+        // --- MITTENTE DINAMICO ---
+        // Usa la tua vera email su Render, e no-reply in locale
+        $senderEmail = getenv('SMTP_FROM') ?: 'no-reply@camagru.it';
+        $mail->setFrom($senderEmail, 'Camagru App');
+        // -------------------------
+
         $mail->addAddress($email);
 
         // Contenuto della mail
