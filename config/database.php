@@ -1,32 +1,33 @@
 <?php
 
 function getDatabaseConnection() {
-    // 1. Definiamo le variabili cercando prima nell'ambiente cloud
-    $host = getenv('DB_HOST');
-    $dbname = getenv('DB_NAME');
-    $user = getenv('DB_USER');
-    $pass = getenv('DB_PASS');
-    $port = getenv('DB_PORT'); // Aiven usa la porta 24641, non la 3306
+    $host = $port = $dbname = $user = $pass = null;
+    $envPath = __DIR__ . '/../.env';
 
-    // 2. Fallback per il locale: se non trova variabili d'ambiente, usa il file .env
-    if (!$host && file_exists(__DIR__ . '/../.env')) {
-        $env = parse_ini_file(__DIR__ . '/../.env');
-        if ($env) {
-            $host = $env['DB_HOST'];
-            $dbname = $env['DB_NAME'];
-            $user = $env['DB_USER'];
-            $pass = $env['DB_PASS'];
-            $port = $env['DB_PORT'] ?? '3306'; 
+    if (file_exists($envPath)) {
+        $env = parse_ini_file($envPath);
+        if ($env !== false) {
+            $host = $env['DB_HOST'] ?? null;
+            $port = $env['DB_PORT'] ?? null;
+            $dbname = $env['DB_NAME'] ?? null;
+            $user = $env['DB_USER'] ?? null;
+            $pass = $env['DB_PASS'] ?? null;
         }
+    } else {
+        $host = getenv('DB_HOST');
+        $port = getenv('DB_PORT');
+        $dbname = getenv('DB_NAME');
+        $user = getenv('DB_USER');
+        $pass = getenv('DB_PASS');
     }
 
-    // Se mancano dati critici, blocchiamo l'esecuzione in modo pulito
-    if (!$host || !$user) {
-        die("Errore critico: Credenziali del database mancanti.");
+    if (!$host || !$port || !$dbname || !$user || !$pass) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Errore Server: Credenziali DB mancanti nell\'ambiente.']);
+        exit;
     }
 
     try {
-        // NOTA: Abbiamo aggiunto 'port' al DSN! È obbligatorio per Aiven.
         $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
         
         $options = [
@@ -38,9 +39,9 @@ function getDatabaseConnection() {
         return new PDO($dsn, $user, $pass, $options);
         
     } catch (PDOException $e) {
-        // In produzione non si stampa mai l'errore a schermo (rischio di sicurezza)
-        error_log("Connessione al database fallita: " . $e->getMessage());
-        die("Impossibile connettersi al database. Riprova più tardi.");
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Connessione al DB fallita: ' . $e->getMessage()]);
+        exit;
     }
 }
 ?>
