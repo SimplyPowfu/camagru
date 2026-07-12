@@ -86,7 +86,7 @@ class AuthController extends Controller {
             if (User::create($username, $email, $hashedPassword, $token)) {
                 $link = "http://localhost:8080/activate?token=" . $token;
                 sendEmail($email, "Attiva Account Camagru", "Clicca qui: " . $link);
-                echo json_encode(['success' => true, 'message' => 'Registrazione completata! Controlla la mail.']);
+                echo json_encode(['success' => true, 'message' => 'Registrazione completata!']);
             }
         } catch (Exception $e) {
             http_response_code(500);
